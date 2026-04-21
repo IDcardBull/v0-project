@@ -1,0 +1,106 @@
+<view class="container">
+  <!-- 图片轮播 -->
+  <swiper class="d-swiper" indicator-dots="{{true}}" circular="{{true}}" indicator-color="rgba(255,255,255,.4)" indicator-active-color="#ffffff">
+    <block wx:for="{{product.images}}" wx:key="*this">
+      <swiper-item>
+        <image src="{{item}}" mode="aspectFill" class="d-swiper-img" />
+      </swiper-item>
+    </block>
+  </swiper>
+
+  <!-- 价格区 -->
+  <view class="d-price-box">
+    <view class="d-price-main">
+      <text class="d-ccy">¥</text>
+      <text class="d-price">{{currentPrice}}</text>
+      <text class="d-unit">/{{product.unit}}</text>
+      <text class="d-moq">≥ {{product.minOrderQty}} {{product.unit}} 起批</text>
+    </view>
+    <view class="d-price-sub">
+      <text>销量 {{product.soldRecent}}</text>
+      <text>库存 {{product.stock}}</text>
+      <text class="tag">{{product.stockStatus}}</text>
+    </view>
+  </view>
+
+  <!-- 标题 -->
+  <view class="d-title-card">
+    <view class="d-title">{{product.name}}</view>
+    <view class="d-attrs">
+      <text wx:for="{{product.attrs}}" wx:key="*this" class="tag">{{item}}</text>
+    </view>
+    <view class="d-sku">货号 {{product.sku}}</view>
+  </view>
+
+  <!-- 阶梯价 -->
+  <view class="d-section">
+    <view class="d-section-title">阶梯价</view>
+    <view class="d-tier-table">
+      <view wx:for="{{product.tiers}}" wx:key="min" class="d-tier-row {{qty >= item.min && (item.max === null || qty <= item.max) ? 'active' : ''}}">
+        <view class="d-tier-range">{{item.min}}{{item.max ? '-' + item.max : '+'}} {{product.unit}}</view>
+        <view class="d-tier-price">¥{{item.price}}<text class="d-tier-unit">/{{product.unit}}</text></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 规格参数 -->
+  <view class="d-section">
+    <view class="d-section-title">规格参数</view>
+    <view class="d-detail">
+      <view wx:for="{{product.detail}}" wx:key="label" class="d-detail-row">
+        <text class="d-detail-label">{{item.label}}</text>
+        <text class="d-detail-value">{{item.value}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 厂家信息 -->
+  <view class="d-section">
+    <view class="d-section-title">厂家信息</view>
+    <view class="d-factory">
+      <view class="d-factory-head">
+        <view class="d-factory-logo">央</view>
+        <view class="d-factory-info">
+          <view class="d-factory-name">央茗陶瓷自营工厂</view>
+          <view class="d-factory-meta">景德镇 · 产能 ≥ 3 万件/月 · 已开店 8 年</view>
+        </view>
+        <view class="btn btn-outline d-factory-btn">进店</view>
+      </view>
+      <view class="d-factory-tags">
+        <text class="tag">营业执照核验</text>
+        <text class="tag">工厂实拍</text>
+        <text class="tag">一件代发</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 详情图 -->
+  <view class="d-section">
+    <view class="d-section-title">商品详情</view>
+    <view class="d-desc">
+      央茗陶瓷严选高白瓷原料，1320°C 高温烧制，釉面莹润致密、硬度高、易清洁。
+      所有出货需通过胚体、釉面、烧成三道质检工序，次品率 ≤ 0.5%。
+      支持批量刻字、Logo 烤花，起订量 200 套以上可定制外箱。
+    </view>
+    <image wx:for="{{product.images}}" wx:key="*this" src="{{item}}" class="d-desc-img" mode="widthFix" />
+  </view>
+
+  <view class="bar-placeholder"></view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <view class="bb-ic" bindtap="callService">
+      <view class="bb-ic-dot">客</view>
+      <text>客服</text>
+    </view>
+    <view class="bb-ic" bindtap="goCart">
+      <view class="bb-ic-dot">单</view>
+      <text>采购单</text>
+    </view>
+    <view class="bb-stepper">
+      <text class="bb-step-label">数量</text>
+      <quantity-stepper value="{{qty}}" min="{{product.minOrderQty}}" bind:change="onQtyChange" />
+    </view>
+    <view class="btn btn-primary bb-action" bindtap="addToCart">加入采购单</view>
+  </view>
+</view>

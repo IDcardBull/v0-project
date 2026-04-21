@@ -1,0 +1,59 @@
+<view class="container">
+  <!-- Tab 切换 -->
+  <view class="o-tabs">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="id"
+      class="o-tab {{activeTab === item.id ? 'active' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="switchTab"
+    >
+      {{item.name}}
+      <view class="o-tab-bar" wx:if="{{activeTab === item.id}}"></view>
+    </view>
+  </view>
+
+  <!-- 订单列表 -->
+  <view class="o-list">
+    <block wx:for="{{list}}" wx:key="id" wx:for-item="order">
+      <view class="o-card" data-id="{{order.id}}" bindtap="goDetail">
+        <view class="o-card-head">
+          <text class="o-id">单号 {{order.id}}</text>
+          <text class="o-status {{order.status}}">{{order.statusText}}</text>
+        </view>
+
+        <view class="o-items">
+          <view wx:for="{{order.items}}" wx:for-item="it" wx:key="id" class="o-item">
+            <image src="{{it.image}}" class="o-item-img" mode="aspectFill" />
+            <view class="o-item-body">
+              <view class="o-item-name ellipsis-2">{{it.name}}</view>
+              <view class="o-item-meta">¥{{it.price}}/{{it.unit}} × {{it.qty}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="o-card-foot">
+          <view class="o-amount">
+            共 {{order.totalQty}} 件 · 合计
+            <text class="o-amount-price">¥{{order.totalAmount}}</text>
+          </view>
+          <view class="o-actions">
+            <view wx:if="{{order.status === 'unpaid'}}" class="btn btn-outline o-btn">取消</view>
+            <view wx:if="{{order.status === 'unpaid'}}" class="btn btn-primary o-btn">去付款</view>
+            <view wx:if="{{order.status === 'paid'}}" class="btn btn-outline o-btn">联系客服</view>
+            <view wx:if="{{order.status === 'shipped'}}" class="btn btn-outline o-btn">查看物流</view>
+            <view wx:if="{{order.status === 'shipped'}}" class="btn btn-primary o-btn">确认收货</view>
+            <view wx:if="{{order.status === 'done'}}" class="btn btn-outline o-btn">再次采购</view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view wx:if="{{list.length === 0}}" class="empty">
+      <view class="empty-title">暂无相关订单</view>
+      <view class="empty-sub">快去批发大厅下一单吧</view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "央茗陶瓷·批发大厅",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "product-card": "/components/product-card/product-card"
+  }
+}
