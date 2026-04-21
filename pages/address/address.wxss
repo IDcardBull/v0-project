@@ -1,0 +1,115 @@
+.page {
+  min-height: 100vh;
+  padding: 20rpx 24rpx 180rpx;
+  background: #f5f5f7;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+.addr {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx;
+}
+.addr-main {
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx dashed #ececec;
+}
+.row-top {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 12rpx;
+}
+.name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+.phone {
+  font-size: 26rpx;
+  color: #555;
+}
+.tag.default {
+  margin-left: auto;
+  font-size: 20rpx;
+  color: var(--brand);
+  background: var(--brand-soft);
+  padding: 2rpx 12rpx;
+  border-radius: 4rpx;
+}
+.company {
+  font-size: 24rpx;
+  color: #8a8a8a;
+  margin-bottom: 6rpx;
+}
+.detail {
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.5;
+}
+
+.addr-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 24rpx;
+  padding-top: 18rpx;
+}
+.action {
+  font-size: 24rpx;
+  color: #555;
+}
+.action.danger {
+  color: var(--price);
+}
+
+.empty {
+  margin-top: 160rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+.empty-icon {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: #ececec;
+  color: #b5b5b5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+}
+.empty-text {
+  font-size: 28rpx;
+  color: #333;
+  margin-top: 12rpx;
+}
+.empty-sub {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20rpx 24rpx calc(20rpx + env(safe-area-inset-bottom));
+  background: #fff;
+  border-top: 1rpx solid #eee;
+}
+.add-btn {
+  height: 84rpx;
+  line-height: 84rpx;
+  background: var(--brand);
+  color: #fff;
+  font-size: 28rpx;
+  border-radius: 12rpx;
+  border: none;
+  letter-spacing: 4rpx;
+}

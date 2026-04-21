@@ -26,19 +26,27 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "批发大厅"
+        "text": "批发大厅",
+        "iconPath": "images/tabbar/home.jpg",
+        "selectedIconPath": "images/tabbar/home-active.jpg"
       },
       {
         "pagePath": "pages/category/category",
-        "text": "分类"
+        "text": "分类",
+        "iconPath": "images/tabbar/category.jpg",
+        "selectedIconPath": "images/tabbar/category-active.jpg"
       },
       {
         "pagePath": "pages/cart/cart",
-        "text": "采购单"
+        "text": "采购单",
+        "iconPath": "images/tabbar/cart.jpg",
+        "selectedIconPath": "images/tabbar/cart-active.jpg"
       },
       {
         "pagePath": "pages/profile/profile",
-        "text": "我的"
+        "text": "我的",
+        "iconPath": "images/tabbar/profile.jpg",
+        "selectedIconPath": "images/tabbar/profile-active.jpg"
       }
     ]
   },

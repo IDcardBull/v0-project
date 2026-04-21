@@ -1,0 +1,32 @@
+<view class="page">
+  <block wx:if="{{list.length}}">
+    <view class="list">
+      <view class="addr" wx:for="{{list}}" wx:key="id">
+        <view class="addr-main" bindtap="onSelect" data-id="{{item.id}}">
+          <view class="row-top">
+            <text class="name">{{item.name}}</text>
+            <text class="phone">{{item.phone}}</text>
+            <text class="tag default" wx:if="{{item.isDefault}}">默认</text>
+          </view>
+          <view class="company" wx:if="{{item.company}}">{{item.company}}</view>
+          <view class="detail">{{item.region}} {{item.detail}}</view>
+        </view>
+        <view class="addr-actions">
+          <view class="action" bindtap="setDefault" data-id="{{item.id}}" wx:if="{{!item.isDefault}}">设为默认</view>
+          <view class="action" bindtap="edit" data-id="{{item.id}}">编辑</view>
+          <view class="action danger" bindtap="remove" data-id="{{item.id}}">删除</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="empty" wx:else>
+    <view class="empty-icon">地</view>
+    <view class="empty-text">暂无收货地址</view>
+    <view class="empty-sub">添加地址后可快速生成询价单</view>
+  </view>
+
+  <view class="bottom-bar">
+    <button class="add-btn" bindtap="add">+ 新增收货地址</button>
+  </view>
+</view>
