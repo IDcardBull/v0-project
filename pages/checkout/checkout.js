@@ -52,7 +52,14 @@ Page({
     }
 
     const goodsAmount = items.reduce((s, i) => s + Number(i.unitPrice) * Number(i.qty), 0)
-    const freight = 0 // 后端目前未提供运费计算接口，先按 0 展示
+    // 运费策略：
+    // - 后端尚未提供 /client/orders/preview 接口，前端按站点配置「满 X 包邮」推算
+    // - threshold = 0 表示全场包邮
+    // - 真实下单金额以后端为准（订单详情会回填 shippingFee）
+    const cfg = app.getSiteConfig()
+    const threshold = Number(cfg.freeShippingThreshold) || 0
+    const flatFee = Number(cfg.flatShippingFee) || 0
+    const freight = threshold === 0 || goodsAmount >= threshold ? 0 : flatFee
     const total = goodsAmount + freight
 
     this.setData({

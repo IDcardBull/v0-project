@@ -16,6 +16,7 @@ const NO_AUTH_PATHS = [
   '/client/categories/tree',
   '/client/brands',
   '/client/products',
+  '/client/config',
 ]
 
 function isPublic(url) {

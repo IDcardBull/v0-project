@@ -213,7 +213,7 @@ Page({
   },
 
   callService() {
-    wx.makePhoneCall({ phoneNumber: '4001888888' })
+    app.callCustomerService()
   },
 
   goCart() {

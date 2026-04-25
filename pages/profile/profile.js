@@ -6,14 +6,29 @@ const app = getApp()
 Page({
   data: {
     user: null,
-    stats: { pending: 0, paid: 0, shipped: 0, completed: 0 },
+    stats: { pending: 0, paid: 0, shipped: 0, completed: 0, afterSale: 0 },
+    version: '',
+    customerServicePhone: '',
+  },
+
+  onLoad() {
+    // 版本号：来自微信运行时
+    this.setData({
+      version: app.globalData.version || '',
+      customerServicePhone: app.getSiteConfig().customerServicePhone || '',
+    })
   },
 
   onShow() {
+    // 站点配置可能在 onLaunch 后异步刷新过，这里同步取一次
+    this.setData({
+      customerServicePhone: app.getSiteConfig().customerServicePhone || '',
+    })
+
     if (!isLogin()) {
       this.setData({
         user: null,
-        stats: { pending: 0, paid: 0, shipped: 0, completed: 0 },
+        stats: { pending: 0, paid: 0, shipped: 0, completed: 0, afterSale: 0 },
       })
       return
     }
@@ -22,7 +37,8 @@ Page({
   },
 
   onPullDownRefresh() {
-    Promise.all([this.loadProfile(), this.loadStats()]).finally(() => wx.stopPullDownRefresh())
+    Promise.all([this.loadProfile(), this.loadStats(), app.loadSiteConfig()])
+      .finally(() => wx.stopPullDownRefresh())
   },
 
   async loadProfile() {
@@ -39,7 +55,15 @@ Page({
   async loadStats() {
     try {
       const stats = await api.order.stats()
-      this.setData({ stats: stats || this.data.stats })
+      // 兼容后端不同字段命名（afterSale / refunding）
+      const merged = {
+        pending: 0, paid: 0, shipped: 0, completed: 0, afterSale: 0,
+        ...(stats || {}),
+      }
+      if (merged.afterSale == null && stats && stats.refunding != null) {
+        merged.afterSale = stats.refunding
+      }
+      this.setData({ stats: merged })
     } catch (e) {}
   },
 
@@ -62,7 +86,10 @@ Page({
     wx.removeStorageSync('token')
     wx.removeStorageSync('userInfo')
     app.globalData.userInfo = null
-    this.setData({ user: null, stats: { pending: 0, paid: 0, shipped: 0, completed: 0 } })
+    this.setData({
+      user: null,
+      stats: { pending: 0, paid: 0, shipped: 0, completed: 0, afterSale: 0 },
+    })
     wx.showToast({ title: '已退出登录', icon: 'success' })
   },
 
@@ -78,12 +105,44 @@ Page({
   },
 
   callService() {
-    wx.showActionSheet({
-      itemList: ['呼叫客服热线 400-188-8888'],
-      success: (res) => {
-        if (res.tapIndex === 0) wx.makePhoneCall({ phoneNumber: '4001888888' })
-      },
+    app.callCustomerService()
+  },
+
+  // 关于央茗陶瓷：弹出公司简介
+  showAbout() {
+    const cfg = app.getSiteConfig()
+    const content = cfg.about || `${app.globalData.companyName} · 景德镇源头工厂\n版本 ${this.data.version || '未知'}`
+    wx.showModal({
+      title: '关于我们',
+      content,
+      showCancel: false,
+      confirmText: '知道了',
     })
+  },
+
+  // 用户协议 / 隐私政策
+  showAgreement() {
+    this._openDocument('agreementUrl', '用户协议',
+      `《央茗陶瓷批发用户协议》\n\n本协议由用户与央茗陶瓷共同确认...\n\n（完整内容请联系客服或访问官网获取）`)
+  },
+  showPrivacy() {
+    this._openDocument('privacyUrl', '隐私政策',
+      `《央茗陶瓷隐私政策》\n\n我们高度重视用户隐私保护...\n\n（完整内容请联系客服或访问官网获取）`)
+  },
+  _openDocument(urlKey, title, fallbackText) {
+    const cfg = app.getSiteConfig()
+    const url = cfg[urlKey]
+    if (url) {
+      wx.navigateTo({
+        url: `/pages/webview/webview?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`,
+        fail: () => {
+          // 没有 webview 页时降级 modal
+          wx.showModal({ title, content: fallbackText, showCancel: false })
+        },
+      })
+      return
+    }
+    wx.showModal({ title, content: fallbackText, showCancel: false })
   },
 
   notImpl() {

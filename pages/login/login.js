@@ -34,8 +34,8 @@ Page({
       return
     }
     this.setData({ counting: true, countdown: 60 })
-    // 后端开发期固定验证码 123456，这里仅做倒计时提示
-    wx.showToast({ title: '开发期固定验证码 123456', icon: 'none', duration: 2500 })
+    // TODO：对接 /client/auth/send-code 接口；后端尚未提供，先仅做倒计时
+    wx.showToast({ title: '验证码已发送', icon: 'none' })
     this._timer = setInterval(() => {
       const n = this.data.countdown - 1
       if (n <= 0) {
@@ -114,5 +114,41 @@ Page({
     } else {
       wx.switchTab({ url: '/pages/profile/profile' })
     }
+  },
+
+  // 协议 / 隐私
+  showAgreement() {
+    const cfg = app.getSiteConfig()
+    if (cfg.agreementUrl) {
+      wx.setClipboardData({
+        data: cfg.agreementUrl,
+        success: () =>
+          wx.showModal({ title: '用户协议', content: '协议链接已复制到剪贴板，可在浏览器打开查看。', showCancel: false }),
+      })
+      return
+    }
+    wx.showModal({
+      title: '用户协议',
+      content: '《央茗陶瓷批发用户协议》\n\n本协议由用户与央茗陶瓷共同确认。完整协议请联系客服获取。',
+      showCancel: false,
+      confirmText: '我已知晓',
+    })
+  },
+  showPrivacy() {
+    const cfg = app.getSiteConfig()
+    if (cfg.privacyUrl) {
+      wx.setClipboardData({
+        data: cfg.privacyUrl,
+        success: () =>
+          wx.showModal({ title: '隐私政策', content: '政策链接已复制到剪贴板，可在浏览器打开查看。', showCancel: false }),
+      })
+      return
+    }
+    wx.showModal({
+      title: '隐私政策',
+      content: '《央茗陶瓷隐私政策》\n\n我们高度重视用户隐私保护。完整内容请联系客服获取。',
+      showCancel: false,
+      confirmText: '我已知晓',
+    })
   },
 })

@@ -56,4 +56,11 @@ const pay = {
   requestPayParams: (orderId) => http.post(`/client/pay/orders/${orderId}`),
 }
 
-module.exports = { auth, user, product, address, order, pay }
+// ---------- 站点配置（客服电话 / 热门搜索 / 协议 URL 等） ----------
+// 后端如果尚未实现该接口，会被 request 拦截器吞掉错误并返回 null，
+// 前端各处会走默认值降级，保证功能不中断。
+const config = {
+  get: () => http.get('/client/config', null, { silent: true }).catch(() => null),
+}
+
+module.exports = { auth, user, product, address, order, pay, config }

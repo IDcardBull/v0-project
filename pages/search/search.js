@@ -1,5 +1,6 @@
 // pages/search/search.js
 const api = require('../../utils/api.js')
+const app = getApp()
 
 const HIST_KEY = 'searchHistory'
 const PAGE_SIZE = 10
@@ -8,7 +9,7 @@ Page({
   data: {
     keyword: '',
     history: [],
-    hotKeywords: ['功夫茶具', '青花瓷', '手绘盖碗', '酒店白瓷', '景德镇', '定制刻字'],
+    hotKeywords: [],
     searched: false,
     list: [],
     page: 1,
@@ -23,6 +24,7 @@ Page({
       this.setData({ categoryId: Number(options.categoryId), searched: true })
       this.refresh()
     }
+    this.loadHotKeywords()
   },
 
   onShow() {
@@ -31,6 +33,28 @@ Page({
 
   onReachBottom() {
     if (this.data.hasMore && !this.data.loading) this.loadMore()
+  },
+
+  // 热搜词加载策略：
+  // 1) 优先用站点配置 siteConfig.hotKeywords
+  // 2) 降级使用一级分类名称（最多 8 个）
+  // 3) 仍无则不展示热搜区
+  async loadHotKeywords() {
+    const cfg = app.getSiteConfig()
+    if (cfg.hotKeywords && cfg.hotKeywords.length) {
+      this.setData({ hotKeywords: cfg.hotKeywords.slice(0, 10) })
+      return
+    }
+    try {
+      const tree = await api.product.categoriesTree()
+      const names = (tree || [])
+        .map((c) => c && c.name)
+        .filter(Boolean)
+        .slice(0, 8)
+      this.setData({ hotKeywords: names })
+    } catch (e) {
+      // 静默
+    }
   },
 
   onInput(e) {
@@ -60,7 +84,12 @@ Page({
     this.setData({ page: 1, list: [], hasMore: true, loading: true, searched: true })
     try {
       const res = await this.fetch(1)
-      this.setData({ list: res.list || [], hasMore: (res.list || []).length >= PAGE_SIZE && (res.list || []).length < res.total })
+      const list = res.list || res.items || []
+      const total = res.total || res.totalCount || list.length
+      this.setData({
+        list,
+        hasMore: list.length >= PAGE_SIZE && list.length < total,
+      })
     } catch (e) {} finally {
       this.setData({ loading: false })
     }
@@ -71,8 +100,10 @@ Page({
     try {
       const next = this.data.page + 1
       const res = await this.fetch(next)
-      const merged = this.data.list.concat(res.list || [])
-      this.setData({ list: merged, page: next, hasMore: merged.length < res.total })
+      const more = res.list || res.items || []
+      const total = res.total || res.totalCount || (this.data.list.length + more.length)
+      const merged = this.data.list.concat(more)
+      this.setData({ list: merged, page: next, hasMore: merged.length < total })
     } catch (e) {} finally {
       this.setData({ loading: false })
     }

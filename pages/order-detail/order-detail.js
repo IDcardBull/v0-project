@@ -1,6 +1,7 @@
 // pages/order-detail/order-detail.js
 const api = require('../../utils/api.js')
 const { formatPrice, statusText, statusColor, formatTime } = require('../../utils/util.js')
+const app = getApp()
 
 Page({
   data: {
@@ -98,6 +99,6 @@ Page({
   },
 
   callService() {
-    wx.makePhoneCall({ phoneNumber: '4001888888' })
+    app.callCustomerService()
   },
 })

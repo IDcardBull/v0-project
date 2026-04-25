@@ -44,8 +44,8 @@
         <view class="order-num">{{stats.completed || 0}}</view>
         <view class="order-label">已完成</view>
       </view>
-      <view class="order-cell" bindtap="callService">
-        <view class="order-num">—</view>
+      <view class="order-cell" data-status="after_sale" bindtap="goOrders">
+        <view class="order-num">{{stats.afterSale || 0}}</view>
         <view class="order-label">售后</view>
       </view>
     </view>
@@ -88,17 +88,21 @@
       <text>地址管理</text>
       <text class="list-arrow">›</text>
     </view>
-    <view class="list-row" bindtap="notImpl">
-      <text>消息通知</text>
+    <view class="list-row" bindtap="callService">
+      <text>客服热线</text>
+      <text class="list-arrow">{{customerServicePhone || '联系客服'}} ›</text>
+    </view>
+    <view class="list-row" bindtap="showAgreement">
+      <text>用户协议</text>
       <text class="list-arrow">›</text>
     </view>
-    <view class="list-row" bindtap="notImpl">
-      <text>意见反馈</text>
+    <view class="list-row" bindtap="showPrivacy">
+      <text>隐私政策</text>
       <text class="list-arrow">›</text>
     </view>
-    <view class="list-row">
+    <view class="list-row" bindtap="showAbout">
       <text>关于央茗陶瓷</text>
-      <text class="list-arrow">v1.0.0</text>
+      <text class="list-arrow">{{version ? 'v' + version : ''}} ›</text>
     </view>
   </view>
 

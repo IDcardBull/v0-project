@@ -30,7 +30,7 @@
       </view>
     </view>
 
-    <view class="s-section">
+    <view class="s-section" wx:if="{{hotKeywords.length}}">
       <view class="s-section-head">
         <text class="s-section-title">热门搜索</text>
       </view>

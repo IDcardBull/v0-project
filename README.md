@@ -27,6 +27,37 @@ const BASE_URL = 'http://192.168.1.5:3001/api'  // ← 改成你的后端地址
 1. 安装 [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html) 稳定版。
 2. 「+ 导入项目」→ 选择本项目根目录（含 `app.json` 的那一层）→ 导入。
 
+### 4)（可选）站点配置接口
+
+小程序启动时会调用 `GET /client/config`（无需登录）拉一份运行时配置，缓存到 `globalData.siteConfig` + storage。
+**后端如果未实现该接口，会被静默跳过，所有页面走默认值降级，功能不会中断。**
+
+期望返回结构（任意字段都可缺省）：
+
+```json
+{
+  "code": 0,
+  "data": {
+    "customerServicePhone": "400-188-8888",
+    "customerServiceWechat": "yangming-cs",
+    "hotKeywords": ["功夫茶具", "青花瓷", "酒店白瓷"],
+    "agreementUrl": "https://yourdomain.com/agreement",
+    "privacyUrl": "https://yourdomain.com/privacy",
+    "freeShippingThreshold": 1000,
+    "flatShippingFee": 20,
+    "about": "央茗陶瓷 · 景德镇源头工厂"
+  }
+}
+```
+
+| 字段 | 影响位置 | 不配置时行为 |
+| --- | --- | --- |
+| `customerServicePhone` | 我的、商品详情、订单详情的「联系客服」 | 提示「客服电话暂未配置」 |
+| `hotKeywords` | 搜索页热搜词 | 用一级分类名前 8 项作为降级 |
+| `agreementUrl` / `privacyUrl` | 登录页 + 我的 → 协议链接 | 弹本地 modal 文本 |
+| `freeShippingThreshold` / `flatShippingFee` | 结算页运费 | 全场包邮（0 元运费）|
+| `about` | 我的 → 关于我们 | 默认品牌名 + 当前版本 |
+
 ---
 
 ## 二、页面清单（共 12 个页面）
