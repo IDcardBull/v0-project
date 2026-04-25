@@ -1,9 +1,21 @@
+.d-loading {
+  text-align: center;
+  padding: 200rpx 0;
+  color: var(--muted);
+  font-size: 26rpx;
+}
+
 .d-swiper {
   width: 100%;
   height: 750rpx;
   background: #f5f5f5;
 }
 .d-swiper-img { width: 100%; height: 100%; }
+.d-swiper-empty {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  color: #bbb; font-size: 28rpx;
+}
 
 .d-price-box {
   background: linear-gradient(135deg, #fdecea, #fff);
@@ -16,6 +28,7 @@
 .d-price-main {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   color: var(--price);
 }
 .d-ccy { font-size: 28rpx; font-weight: 700; }
@@ -76,6 +89,39 @@
   margin-bottom: 16rpx;
 }
 
+/* SKU 规格选择 */
+.d-spec-group {
+  margin-bottom: 16rpx;
+}
+.d-spec-group:last-child { margin-bottom: 0; }
+.d-spec-label {
+  font-size: 24rpx;
+  color: var(--muted);
+  margin-bottom: 10rpx;
+}
+.d-spec-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.d-spec-opt {
+  min-width: 96rpx;
+  padding: 10rpx 24rpx;
+  border: 2rpx solid var(--divider);
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  color: var(--text-2);
+  text-align: center;
+  background: #fafafa;
+}
+.d-spec-opt.active {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: var(--brand-soft);
+  font-weight: 600;
+}
+
+/* 阶梯价 */
 .d-tier-table {
   border: 2rpx solid var(--divider);
   border-radius: 8rpx;
@@ -91,66 +137,37 @@
   color: var(--text-2);
 }
 .d-tier-row:last-child { border-bottom: none; }
-.d-tier-row.active { background: var(--price-soft); }
+.d-tier-row.active { background: #fdecea; }
 .d-tier-row.active .d-tier-range { color: var(--price); font-weight: 600; }
 .d-tier-price { color: var(--price); font-weight: 700; font-size: 30rpx; }
 .d-tier-unit { font-size: 20rpx; font-weight: 400; color: var(--muted); margin-left: 4rpx; }
 
-.d-detail-row {
-  display: flex;
-  padding: 12rpx 0;
-  font-size: 26rpx;
-  border-bottom: 2rpx dashed #f0f0f0;
-}
-.d-detail-row:last-child { border-bottom: none; }
-.d-detail-label {
-  width: 140rpx;
-  color: var(--muted);
-  flex-shrink: 0;
-}
-.d-detail-value { color: var(--text); flex: 1; }
-
-.d-factory-head {
+/* 数量 */
+.d-qty-row {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 16rpx;
 }
-.d-factory-logo {
-  width: 88rpx; height: 88rpx;
-  border-radius: 14rpx;
-  background: var(--brand);
-  color: #fff;
-  font-weight: 700;
-  font-size: 36rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.d-factory-info { flex: 1; min-width: 0; }
-.d-factory-name { font-size: 28rpx; font-weight: 700; color: var(--text); }
-.d-factory-meta { font-size: 22rpx; color: var(--muted); margin-top: 4rpx; }
-.d-factory-btn { height: 56rpx; padding: 0 24rpx; border-radius: 28rpx; font-size: 24rpx; }
-.d-factory-tags {
-  margin-top: 16rpx;
-  display: flex;
-  gap: 8rpx;
-  flex-wrap: wrap;
+.d-qty-tip {
+  font-size: 22rpx;
+  color: var(--muted);
 }
 
+/* 详情 */
 .d-desc {
   font-size: 26rpx;
   color: var(--text-2);
   line-height: 1.65;
 }
-.d-desc-img {
-  width: 100%;
-  margin-top: 20rpx;
-  border-radius: 8rpx;
+.d-desc-placeholder {
+  color: var(--muted);
+  font-size: 24rpx;
 }
 
 .bar-placeholder { height: 140rpx; }
 
+/* 底部操作栏 */
 .bottom-bar {
   position: fixed;
   left: 0; right: 0; bottom: 0;
@@ -168,7 +185,8 @@
   align-items: center;
   font-size: 20rpx;
   color: var(--text-2);
-  padding: 0 10rpx;
+  padding: 0 6rpx;
+  flex-shrink: 0;
 }
 .bb-ic-dot {
   width: 48rpx; height: 48rpx;
@@ -181,18 +199,22 @@
   font-size: 22rpx;
   margin-bottom: 2rpx;
 }
-.bb-stepper {
+.bb-action {
   flex: 1;
+  height: 72rpx;
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  justify-content: flex-end;
-  margin-right: 8rpx;
-}
-.bb-step-label { font-size: 22rpx; color: var(--muted); }
-.bb-action {
-  border-radius: 36rpx;
-  height: 72rpx;
-  padding: 0 28rpx;
+  justify-content: center;
   font-size: 26rpx;
+  font-weight: 600;
+  color: #fff;
 }
+.bb-cart {
+  background: linear-gradient(135deg, #f5a623, #ec8b00);
+  border-radius: 36rpx 0 0 36rpx;
+}
+.bb-buy {
+  background: linear-gradient(135deg, #e63946, #c1121f);
+  border-radius: 0 36rpx 36rpx 0;
+}
+.bb-action:active { opacity: .85; }

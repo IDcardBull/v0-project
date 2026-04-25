@@ -146,3 +146,25 @@
 }
 .rec-unit { font-weight: 400; font-size: 20rpx; color: var(--muted); margin-left: 4rpx; }
 .rec-moq { font-size: 20rpx; color: var(--brand); margin-top: 4rpx; }
+
+.cat-l-empty {
+  text-align: center;
+  color: var(--muted);
+  font-size: 22rpx;
+  padding: 40rpx 0;
+}
+
+.rec-empty {
+  color: var(--muted);
+  font-size: 24rpx;
+  text-align: center;
+  padding: 40rpx 0;
+}
+
+.rec-img-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  font-size: 22rpx;
+}

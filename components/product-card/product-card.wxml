@@ -1,47 +1,37 @@
 <view class="pc" bindtap="onCardTap">
   <view class="pc-img">
-    <image src="{{product.image}}" mode="aspectFill" class="pc-cover" lazy-load="{{true}}" />
-    <view wx:if="{{product.tags && product.tags[0]}}" class="pc-badge {{product.tags[0] === '特惠' ? 'badge-danger' : (product.tags[0] === '预售' ? 'badge-warn' : '')}}">
-      {{product.tags[0]}}
-    </view>
-    <view class="pc-sold">近 30 日 {{product.soldRecent}}</view>
+    <image
+      wx:if="{{coverUrl}}"
+      src="{{coverUrl}}"
+      mode="aspectFill"
+      class="pc-cover"
+      lazy-load="{{true}}"
+    />
+    <view wx:else class="pc-placeholder">暂无图</view>
+    <view wx:if="{{tagText}}" class="pc-badge">{{tagText}}</view>
   </view>
 
   <view class="pc-body">
     <view class="pc-title ellipsis-2">{{product.name}}</view>
 
-    <view class="pc-attrs">
-      <text wx:for="{{product.attrs}}" wx:key="*this" class="tag">{{item}}</text>
+    <view wx:if="{{product.brand && product.brand.name}}" class="pc-brand">
+      {{product.brand.name}}
     </view>
 
-    <view class="pc-sku">货号 {{product.sku}}</view>
-
-    <view class="pc-moq">
-      <text class="pc-moq-label">起批量</text>
-      <text class="pc-moq-value">≥ {{product.minOrderQty}} {{product.unit}}</text>
+    <view class="pc-tags" wx:if="{{product.craft || product.material}}">
+      <text wx:if="{{product.craft}}" class="tag">{{product.craft}}</text>
+      <text wx:if="{{product.material}}" class="tag">{{product.material}}</text>
     </view>
 
-    <view class="pc-tiers">
-      <view wx:for="{{product.tiers}}" wx:key="min" class="pc-tier">
-        <text class="pc-tier-range">
-          {{item.min}}{{item.max ? '-' + item.max : '+'}} {{product.unit}}
-        </text>
-        <text class="pc-tier-price">¥{{item.price}}</text>
-      </view>
-    </view>
+    <view class="pc-moq">{{minQtyText}}</view>
 
     <view class="pc-foot">
       <view class="pc-price-wrap">
         <text class="pc-price-currency">¥</text>
-        <text class="pc-price">{{currentPrice}}</text>
-        <text class="pc-unit">/{{product.unit}}</text>
+        <text class="pc-price">{{priceText}}</text>
+        <text class="pc-unit">起</text>
       </view>
-      <view class="pc-action" catchtap="stopTap">
-        <block wx:if="{{qty > 0}}">
-          <quantity-stepper value="{{qty}}" min="{{0}}" step="{{1}}" bind:change="onQtyChange" />
-        </block>
-        <view wx:else class="pc-btn" catchtap="onAddTap">加入采购单</view>
-      </view>
+      <view class="pc-sales">{{salesText}}</view>
     </view>
   </view>
 </view>

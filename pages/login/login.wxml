@@ -40,7 +40,9 @@
       </view>
     </view>
 
-    <button class="submit" bindtap="onLogin">登 录 / 注 册</button>
+    <button class="submit {{loading ? 'loading' : ''}}" disabled="{{loading}}" bindtap="onPhoneLogin">
+      {{loading ? '登录中...' : '登 录 / 注 册'}}
+    </button>
 
     <view class="agree">
       <text class="checkbox {{agree ? 'checked' : ''}}" bindtap="toggleAgree"></text>

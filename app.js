@@ -1,55 +1,70 @@
 // app.js
+const cart = require('./utils/cart.js')
+
 App({
   onLaunch() {
-    // 读取本地缓存的采购单
-    const cart = wx.getStorageSync('cart') || []
-    this.globalData.cart = cart
-  },
+    // 启动时刷新 tabBar 采购单角标
+    this.refreshCartBadge()
 
-  // 获取采购单总件数（供 tabBar 角标使用）
-  getCartCount() {
-    return (this.globalData.cart || []).reduce((s, it) => s + (it.qty || 0), 0)
-  },
-
-  // 新增 / 更新 采购单条目
-  upsertCart(item) {
-    const cart = this.globalData.cart || []
-    const idx = cart.findIndex(c => c.id === item.id)
-    if (idx >= 0) {
-      cart[idx].qty = item.qty
-    } else {
-      cart.push(item)
+    // 校验 token，无效则清空（页面遇到 401 时会自动跳登录）
+    const token = wx.getStorageSync('token')
+    if (token) {
+      this.globalData.token = token
+      this.globalData.userInfo = wx.getStorageSync('userInfo') || null
     }
-    this.globalData.cart = cart.filter(c => c.qty > 0)
-    wx.setStorageSync('cart', this.globalData.cart)
-    this.refreshTabBadge()
   },
 
-  removeFromCart(id) {
-    this.globalData.cart = (this.globalData.cart || []).filter(c => c.id !== id)
-    wx.setStorageSync('cart', this.globalData.cart)
-    this.refreshTabBadge()
+  onShow() {
+    this.refreshCartBadge()
   },
 
-  clearCart() {
-    this.globalData.cart = []
-    wx.setStorageSync('cart', [])
-    this.refreshTabBadge()
+  // 检查是否登录
+  isLogin() {
+    return !!wx.getStorageSync('token')
   },
 
-  // 刷新 tabBar "采购单" 的红色角标
-  refreshTabBadge() {
-    const count = this.getCartCount()
-    if (count > 0) {
-      wx.setTabBarBadge({ index: 2, text: String(count > 99 ? '99+' : count) }).catch(() => {})
-    } else {
-      wx.removeTabBarBadge({ index: 2 }).catch(() => {})
+  // 引导登录（页面调用）
+  ensureLogin() {
+    if (this.isLogin()) return true
+    wx.navigateTo({ url: '/pages/login/login' })
+    return false
+  },
+
+  // 设置登录态
+  setLogin({ token, user }) {
+    if (token) wx.setStorageSync('token', token)
+    if (user) wx.setStorageSync('userInfo', user)
+    this.globalData.token = token
+    this.globalData.userInfo = user
+  },
+
+  // 退出登录
+  logout() {
+    wx.removeStorageSync('token')
+    wx.removeStorageSync('userInfo')
+    this.globalData.token = ''
+    this.globalData.userInfo = null
+  },
+
+  // 刷新 tabBar 第三个 tab "采购单" 的红色角标
+  refreshCartBadge() {
+    const count = cart.totalCount()
+    try {
+      if (count > 0) {
+        wx.setTabBarBadge({ index: 2, text: String(count > 99 ? '99+' : count) })
+      } else {
+        wx.removeTabBarBadge({ index: 2 })
+      }
+    } catch (e) {
+      // 不在 tabBar 页时调用会报错，忽略
     }
   },
 
   globalData: {
-    cart: [],
+    token: '',
     userInfo: null,
-    companyName: '央茗陶瓷'
-  }
+    companyName: '央茗陶瓷',
+    // 「立即购买」临时载荷：详情页 -> checkout，避免冗长 URL 参数
+    buyNowPayload: null,
+  },
 })

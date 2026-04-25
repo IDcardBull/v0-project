@@ -10,7 +10,7 @@
         bindinput="onInput"
         bindconfirm="doSearch"
         confirm-type="search"
-        focus="{{true}}"
+        focus="{{!categoryId}}"
       />
       <text wx:if="{{keyword}}" class="s-clear" bindtap="clearInput">×</text>
     </view>
@@ -44,17 +44,19 @@
 
   <!-- 搜索结果 -->
   <block wx:else>
-    <view class="s-result-head">
+    <view class="s-result-head" wx:if="{{!loading || list.length}}">
       <text>共 {{list.length}} 件相关商品</text>
     </view>
     <view class="s-result-list">
       <block wx:for="{{list}}" wx:key="id">
-        <product-card product="{{item}}" qty="{{cartMap[item.id] || 0}}" bind:change="onQtyChange" />
+        <product-card product="{{item}}" />
       </block>
-      <view wx:if="{{list.length === 0}}" class="empty">
+      <view wx:if="{{!loading && list.length === 0}}" class="empty">
         <view class="empty-title">无匹配商品</view>
         <view class="empty-sub">试试其他关键词，或联系客服报价</view>
       </view>
+      <view wx:if="{{loading}}" class="list-end">加载中…</view>
+      <view wx:elif="{{!hasMore && list.length > 0}}" class="list-end">— 没有更多了 —</view>
     </view>
   </block>
 </view>
