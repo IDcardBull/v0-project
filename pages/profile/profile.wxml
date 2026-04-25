@@ -1,13 +1,16 @@
 <view class="container">
   <!-- 用户信息头部 -->
-  <view class="user-head">
-    <view class="user-avatar">{{userInfo ? userInfo.name.charAt(0) : '企'}}</view>
+  <view class="user-head" bindtap="goLogin">
+    <view class="user-avatar">
+      <image wx:if="{{user.avatar}}" src="{{user.avatar}}" class="user-avatar-img" mode="aspectFill" />
+      <text wx:else>{{user ? (user.nickname ? user.nickname.charAt(0) : '我') : '客'}}</text>
+    </view>
     <view class="user-info">
-      <block wx:if="{{userInfo}}">
-        <view class="user-name">{{userInfo.name}}</view>
+      <block wx:if="{{user}}">
+        <view class="user-name">{{user.nickname || user.phone || '央茗用户'}}</view>
         <view class="user-role">
-          <text class="tag">{{userInfo.level}}</text>
-          <text>{{userInfo.phone}}</text>
+          <text class="tag" wx:if="{{user.level}}">{{user.level}}</text>
+          <text wx:if="{{user.phone}}">{{user.phone}}</text>
         </view>
       </block>
       <block wx:else>
@@ -15,45 +18,37 @@
         <view class="user-role">登录后享受会员批发价</view>
       </block>
     </view>
-    <view class="user-action" bindtap="goLogin">{{userInfo ? '店铺认证' : '登录'}}</view>
+    <view class="user-arrow">›</view>
   </view>
 
   <!-- 订单概览 -->
   <view class="order-panel card">
     <view class="panel-head">
       <text class="panel-title">我的订单</text>
-      <view class="panel-more" bindtap="goOrders" data-status="all">全部订单 ›</view>
+      <view class="panel-more" bindtap="goOrders">全部订单 ›</view>
     </view>
     <view class="order-grid">
-      <view class="order-cell" data-status="unpaid" bindtap="goOrders">
-        <view class="order-num">{{stats.unpaid}}</view>
+      <view class="order-cell" data-status="pending" bindtap="goOrders">
+        <view class="order-num">{{stats.pending || 0}}</view>
         <view class="order-label">待付款</view>
       </view>
       <view class="order-cell" data-status="paid" bindtap="goOrders">
-        <view class="order-num">{{stats.paid}}</view>
+        <view class="order-num">{{stats.paid || 0}}</view>
         <view class="order-label">待发货</view>
       </view>
       <view class="order-cell" data-status="shipped" bindtap="goOrders">
-        <view class="order-num">{{stats.shipped}}</view>
-        <view class="order-label">已发货</view>
+        <view class="order-num">{{stats.shipped || 0}}</view>
+        <view class="order-label">待收货</view>
       </view>
-      <view class="order-cell" data-status="done" bindtap="goOrders">
-        <view class="order-num">{{stats.done}}</view>
+      <view class="order-cell" data-status="completed" bindtap="goOrders">
+        <view class="order-num">{{stats.completed || 0}}</view>
         <view class="order-label">已完成</view>
       </view>
-      <view class="order-cell" bindtap="callService">
-        <view class="order-num">—</view>
+      <view class="order-cell" data-status="after_sale" bindtap="goOrders">
+        <view class="order-num">{{stats.afterSale || 0}}</view>
         <view class="order-label">售后</view>
       </view>
     </view>
-  </view>
-
-  <!-- 会员信息面板 -->
-  <view class="vip-card">
-    <view class="vip-title">央茗金牌批发会员</view>
-    <view class="vip-sub">累计采购 ¥68,800 · 再采购 ¥31,200 升级钻石会员</view>
-    <view class="vip-progress"><view class="vip-bar" style="width: 68%"></view></view>
-    <view class="vip-btn">查看会员权益</view>
   </view>
 
   <!-- 服务菜单 -->
@@ -64,31 +59,23 @@
         <view class="menu-icon">址</view>
         <text>收货地址</text>
       </view>
-      <view class="menu-item">
+      <view class="menu-item" bindtap="notImpl">
         <view class="menu-icon">票</view>
         <text>发票抬头</text>
       </view>
-      <view class="menu-item">
+      <view class="menu-item" bindtap="notImpl">
         <view class="menu-icon">证</view>
         <text>营业执照</text>
-      </view>
-      <view class="menu-item">
-        <view class="menu-icon">约</view>
-        <text>合作合约</text>
       </view>
       <view class="menu-item" bindtap="callService">
         <view class="menu-icon">客</view>
         <text>专属客服</text>
       </view>
-      <view class="menu-item">
-        <view class="menu-icon">厂</view>
-        <text>工厂实拍</text>
-      </view>
-      <view class="menu-item">
+      <view class="menu-item" bindtap="notImpl">
         <view class="menu-icon">样</view>
         <text>样品申请</text>
       </view>
-      <view class="menu-item">
+      <view class="menu-item" bindtap="notImpl">
         <view class="menu-icon">询</view>
         <text>批量询价</text>
       </view>
@@ -97,21 +84,25 @@
 
   <!-- 列表菜单 -->
   <view class="list-menu card">
-    <view class="list-row">
+    <view class="list-row" bindtap="goAddress">
       <text>地址管理</text>
       <text class="list-arrow">›</text>
     </view>
-    <view class="list-row">
-      <text>消息通知</text>
+    <view class="list-row" bindtap="callService">
+      <text>客服热线</text>
+      <text class="list-arrow">{{customerServicePhone || '联系客服'}} ›</text>
+    </view>
+    <view class="list-row" bindtap="showAgreement">
+      <text>用户协议</text>
       <text class="list-arrow">›</text>
     </view>
-    <view class="list-row">
-      <text>意见反馈</text>
+    <view class="list-row" bindtap="showPrivacy">
+      <text>隐私政策</text>
       <text class="list-arrow">›</text>
     </view>
-    <view class="list-row">
+    <view class="list-row" bindtap="showAbout">
       <text>关于央茗陶瓷</text>
-      <text class="list-arrow">v1.0.0</text>
+      <text class="list-arrow">{{version ? 'v' + version : ''}} ›</text>
     </view>
   </view>
 

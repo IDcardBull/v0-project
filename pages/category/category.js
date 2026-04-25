@@ -1,67 +1,81 @@
-const { categories, getByCategory } = require('../../utils/products.js')
-
-const subCatMap = {
-  all: [
-    { name: '全部商品', icon: '全' },
-    { name: '新品上架', icon: '新' },
-    { name: '爆款工厂', icon: '爆' },
-    { name: '特惠专场', icon: '特' },
-    { name: '可定制', icon: '定' },
-    { name: '48h 发货', icon: '快' }
-  ],
-  'tea-set': [
-    { name: '功夫茶具', icon: '功' },
-    { name: '旅行茶具', icon: '旅' },
-    { name: '盖碗套装', icon: '盖' },
-    { name: '壶承茶盘', icon: '盘' },
-    { name: '茶器配件', icon: '件' },
-    { name: '礼盒套装', icon: '礼' }
-  ],
-  cup: [
-    { name: '主人杯', icon: '主' },
-    { name: '品茗杯', icon: '品' },
-    { name: '马克杯', icon: '马' },
-    { name: '咖啡杯', icon: '咖' },
-    { name: '单色釉', icon: '釉' },
-    { name: '手绘杯', icon: '绘' }
-  ],
-  gaiwan:    [{ name: '三才盖碗', icon: '盖' }, { name: '双层盖碗', icon: '双' }, { name: '手绘粉彩', icon: '粉' }],
-  vase:      [{ name: '摆件花瓶', icon: '瓶' }, { name: '青花系列', icon: '青' }, { name: '收藏级', icon: '藏' }],
-  tableware: [{ name: '碗盘', icon: '碗' }, { name: '餐具套装', icon: '套' }, { name: '酒店用瓷', icon: '店' }],
-  custom:    [{ name: '企业 Logo', icon: 'L' }, { name: '文创定制', icon: '文' }, { name: '单色定烧', icon: '烧' }]
-}
+// pages/category/category.js
+const api = require('../../utils/api.js')
+const { formatPrice } = require('../../utils/util.js')
 
 Page({
   data: {
-    categories,
-    activeCat: 'all',
-    activeCatName: '全部商品',
-    subCats: subCatMap.all,
-    recList: []
+    tree: [],            // 完整分类树
+    activeCat: 0,        // 当前选中的一级分类 id
+    activeCatName: '',
+    subCats: [],         // 当前一级下的二级分类
+    recList: [],         // 子分类商品列表
+    loading: false,
   },
 
   onLoad() {
-    this.refreshRec()
+    this.bootstrap()
   },
 
-  refreshRec() {
-    const list = getByCategory(this.data.activeCat).slice(0, 6)
-    this.setData({ recList: list })
+  async bootstrap() {
+    try {
+      this.setData({ loading: true })
+      const tree = await api.product.categoriesTree()
+      const top = (tree || []).filter((n) => !n.parentId)
+      this.setData({ tree })
+      if (top.length > 0) {
+        await this.selectCategory(top[0])
+      }
+    } catch (e) {
+      // ignore
+    } finally {
+      this.setData({ loading: false })
+    }
+  },
+
+  async selectCategory(node) {
+    const subCats = (node.children || []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      icon: c.icon || (c.name && c.name.charAt(0)) || '·',
+    }))
+    this.setData({
+      activeCat: node.id,
+      activeCatName: node.name + '精选',
+      subCats,
+      recList: [],
+    })
+    // 取该分类下的热销前 6 件
+    try {
+      const res = await api.product.list({
+        categoryId: node.id,
+        sort: 'sales',
+        page: 1,
+        pageSize: 6,
+      })
+      const list = (res.list || []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        image: p.mainImage,
+        price: formatPrice(p.retailPrice),
+        minQty: p.minWholesaleQty || 1,
+      }))
+      this.setData({ recList: list })
+    } catch (e) {
+      // ignore
+    }
   },
 
   onCatTap(e) {
-    const id = e.currentTarget.dataset.id
-    const cat = categories.find(c => c.id === id)
-    this.setData({
-      activeCat: id,
-      activeCatName: cat ? cat.name + '精选' : '',
-      subCats: subCatMap[id] || []
-    }, () => this.refreshRec())
+    const id = Number(e.currentTarget.dataset.id)
+    if (id === this.data.activeCat) return
+    const node = (this.data.tree || []).find((n) => n.id === id)
+    if (node) this.selectCategory(node)
   },
 
   onSubCatTap(e) {
-    const name = e.currentTarget.dataset.name
-    wx.showToast({ title: `进入「${name}」`, icon: 'none' })
+    const id = e.currentTarget.dataset.id
+    // 跳到搜索页（用 categoryId 参数过滤）
+    wx.navigateTo({ url: `/pages/search/search?categoryId=${id}` })
   },
 
   goDetail(e) {
@@ -71,5 +85,5 @@ Page({
 
   goSearch() {
     wx.navigateTo({ url: '/pages/search/search' })
-  }
+  },
 })

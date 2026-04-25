@@ -1,7 +1,7 @@
 <view class="container cart-container">
   <!-- 顶栏 -->
   <view class="cart-head">
-    <view class="cart-head-title">共 {{totalQty}} 件商品</view>
+    <view class="cart-head-title">采购单 · 共 {{totalQty}} 件</view>
     <view class="cart-head-action" bindtap="toggleEdit">{{editing ? '完成' : '管理'}}</view>
   </view>
 
@@ -15,19 +15,26 @@
 
   <!-- 列表 -->
   <view wx:else class="cart-list">
-    <view wx:for="{{list}}" wx:key="id" class="cart-item">
-      <view class="cart-check {{item.checked ? 'checked' : ''}}" data-id="{{item.id}}" bindtap="toggleCheck">
-        <text wx:if="{{item.checked}}">✓</text>
+    <view wx:for="{{list}}" wx:key="skuId" class="cart-item">
+      <view class="cart-check {{item.selected ? 'checked' : ''}}" data-skuid="{{item.skuId}}" bindtap="toggleSelect">
+        <text wx:if="{{item.selected}}">✓</text>
       </view>
 
-      <image src="{{item.image}}" class="cart-img" mode="aspectFill" data-id="{{item.id}}" bindtap="goDetail" />
+      <image
+        wx:if="{{item.skuImage}}"
+        src="{{item.skuImage}}"
+        class="cart-img"
+        mode="aspectFill"
+        data-pid="{{item.productId}}"
+        bindtap="goDetail"
+      />
+      <view wx:else class="cart-img cart-img-empty" data-pid="{{item.productId}}" bindtap="goDetail">暂无图</view>
 
       <view class="cart-info">
-        <view class="cart-name ellipsis-2" data-id="{{item.id}}" bindtap="goDetail">{{item.name}}</view>
-        <view class="cart-meta">
-          <text class="tag">{{item.unit}}</text>
-          <text class="cart-tier">当前档位 ¥{{item.price}}/{{item.unit}}</text>
-        </view>
+        <view class="cart-name ellipsis-2" data-pid="{{item.productId}}" bindtap="goDetail">{{item.productName}}</view>
+        <view class="cart-spec" wx:if="{{item.skuSpec}}">{{item.skuSpec}}</view>
+        <view class="cart-tier">当前档位 ¥{{item.unitPrice}}</view>
+
         <view class="cart-foot">
           <view class="cart-price-wrap">
             <text class="cart-ccy">¥</text>
@@ -36,7 +43,7 @@
           <quantity-stepper
             value="{{item.qty}}"
             min="{{1}}"
-            data-id="{{item.id}}"
+            data-skuid="{{item.skuId}}"
             bind:change="onQtyChange"
           />
         </view>
@@ -50,8 +57,8 @@
   <!-- 底部结算栏 -->
   <view wx:if="{{list.length > 0}}" class="bottom-bar">
     <view class="bb-left">
-      <view class="bb-check {{allChecked ? 'checked' : ''}}" bindtap="toggleAll">
-        <text wx:if="{{allChecked}}">✓</text>
+      <view class="bb-check {{allSelected ? 'checked' : ''}}" bindtap="toggleAll">
+        <text wx:if="{{allSelected}}">✓</text>
       </view>
       <text>全选</text>
     </view>
@@ -59,14 +66,14 @@
     <view class="bb-amount">
       <block wx:if="{{!editing}}">
         <text>合计</text>
-        <text class="bb-price">¥{{checkedAmount}}</text>
+        <text class="bb-price">¥{{selectedAmount}}</text>
       </block>
       <block wx:else>
-        <text>已选 {{checkedCount}} 件</text>
+        <text>已选 {{selectedCount}} 件</text>
       </block>
     </view>
 
-    <view wx:if="{{!editing}}" class="btn btn-danger" bindtap="checkout">生成询价单 ({{checkedCount}})</view>
-    <view wx:else class="btn btn-outline" bindtap="removeChecked">删除</view>
+    <view wx:if="{{!editing}}" class="btn btn-danger bb-btn" bindtap="checkout">去结算 ({{selectedCount}})</view>
+    <view wx:else class="btn btn-outline bb-btn" bindtap="removeSelected">删除</view>
   </view>
 </view>

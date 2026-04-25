@@ -1,14 +1,16 @@
-const { getTierPrice, getProductById } = require('../../utils/products.js')
-const { formatMoney } = require('../../utils/util.js')
+// pages/cart/cart.js
+const cartStore = require('../../utils/cart.js')
+const { formatPrice } = require('../../utils/util.js')
+const app = getApp()
 
 Page({
   data: {
     list: [],
     editing: false,
     totalQty: 0,
-    allChecked: true,
-    checkedCount: 0,
-    checkedAmount: '0.00'
+    allSelected: false,
+    selectedCount: 0,
+    selectedAmount: '0.00',
   },
 
   onShow() {
@@ -16,89 +18,84 @@ Page({
   },
 
   refresh() {
-    const app = getApp()
-    const cart = (app.globalData.cart || []).map(it => {
-      // 用当前数量重新算单价（对应阶梯价）
-      const product = getProductById(it.id)
-      const price = product ? getTierPrice(product, it.qty) : it.price
-      const lineTotal = formatMoney(price * it.qty)
-      return { ...it, price, lineTotal, checked: it.checked !== false }
-    })
-    const totalQty = cart.reduce((s, i) => s + i.qty, 0)
-    const checkedList = cart.filter(i => i.checked)
-    const checkedCount = checkedList.reduce((s, i) => s + i.qty, 0)
-    const checkedAmount = formatMoney(
-      checkedList.reduce((s, i) => s + i.qty * i.price, 0)
-    )
-    const allChecked = cart.length > 0 && cart.every(i => i.checked)
+    const list = cartStore.getList().map((it) => ({
+      ...it,
+      lineTotal: formatPrice(Number(it.unitPrice) * Number(it.qty)),
+    }))
+    const selected = list.filter((i) => i.selected)
+    const totalQty = list.reduce((s, i) => s + Number(i.qty), 0)
+    const selAmount = selected.reduce((s, i) => s + Number(i.unitPrice) * Number(i.qty), 0)
+
     this.setData({
-      list: cart, totalQty, checkedCount, checkedAmount, allChecked
+      list,
+      totalQty,
+      selectedCount: selected.reduce((s, i) => s + Number(i.qty), 0),
+      selectedAmount: formatPrice(selAmount),
+      allSelected: list.length > 0 && selected.length === list.length,
     })
+    app.refreshCartBadge()
   },
 
   toggleEdit() {
     this.setData({ editing: !this.data.editing })
   },
 
-  toggleCheck(e) {
-    const id = e.currentTarget.dataset.id
-    const list = this.data.list.map(it =>
-      it.id === id ? { ...it, checked: !it.checked } : it
-    )
-    this._writeBack(list)
+  toggleSelect(e) {
+    const skuId = e.currentTarget.dataset.skuid
+    const item = this.data.list.find((i) => Number(i.skuId) === Number(skuId))
+    if (!item) return
+    cartStore.setSelected(skuId, !item.selected)
+    this.refresh()
   },
 
   toggleAll() {
-    const all = !this.data.allChecked
-    const list = this.data.list.map(it => ({ ...it, checked: all }))
-    this._writeBack(list)
-  },
-
-  _writeBack(list) {
-    const app = getApp()
-    app.globalData.cart = list.map(({ checked, lineTotal, ...rest }) => ({ ...rest, checked }))
-    wx.setStorageSync('cart', app.globalData.cart)
+    cartStore.setAllSelected(!this.data.allSelected)
     this.refresh()
   },
 
   onQtyChange(e) {
-    const id = e.currentTarget.dataset.id
-    const qty = e.detail.value
-    const app = getApp()
-    if (qty <= 0) {
-      app.removeFromCart(id)
-    } else {
-      const product = getProductById(id)
-      const price = product ? getTierPrice(product, qty) : 0
-      const old = (app.globalData.cart || []).find(c => c.id === id) || {}
-      app.upsertCart({ ...old, id, qty, price })
-    }
+    const skuId = e.currentTarget.dataset.skuid
+    const qty = Math.max(1, Number(e.detail.value) || 1)
+    cartStore.updateQty(skuId, qty)
     this.refresh()
-  },
-
-  removeChecked() {
-    const app = getApp()
-    const remain = this.data.list.filter(i => !i.checked).map(({ checked, lineTotal, ...rest }) => rest)
-    app.globalData.cart = remain
-    wx.setStorageSync('cart', remain)
-    app.refreshTabBadge()
-    this.refresh()
-  },
-
-  checkout() {
-    if (this.data.checkedCount === 0) {
-      return wx.showToast({ title: '请先勾选商品', icon: 'none' })
-    }
-    const items = this.data.list.filter(i => i.checked)
-    wx.setStorageSync('checkoutItems', items)
-    wx.navigateTo({ url: '/pages/order-detail/order-detail?mode=new' })
   },
 
   goDetail(e) {
-    wx.navigateTo({ url: `/pages/detail/detail?id=${e.currentTarget.dataset.id}` })
+    const productId = e.currentTarget.dataset.pid
+    if (productId) wx.navigateTo({ url: `/pages/detail/detail?id=${productId}` })
   },
 
   goIndex() {
     wx.switchTab({ url: '/pages/index/index' })
-  }
+  },
+
+  removeSelected() {
+    const ids = cartStore.selectedItems().map((i) => i.skuId)
+    if (ids.length === 0) {
+      wx.showToast({ title: '请先勾选商品', icon: 'none' })
+      return
+    }
+    wx.showModal({
+      title: '提示',
+      content: `确认删除 ${ids.length} 件商品？`,
+      success: (r) => {
+        if (r.confirm) {
+          cartStore.removeMany(ids)
+          this.refresh()
+          wx.showToast({ title: '已删除', icon: 'success' })
+        }
+      },
+    })
+  },
+
+  checkout() {
+    if (!app.ensureLogin()) return
+    const selected = cartStore.selectedItems()
+    if (selected.length === 0) {
+      wx.showToast({ title: '请先勾选商品', icon: 'none' })
+      return
+    }
+    app.globalData.buyNowPayload = null
+    wx.navigateTo({ url: '/pages/checkout/checkout?from=cart' })
+  },
 })

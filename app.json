@@ -9,7 +9,10 @@
     "pages/orders/orders",
     "pages/order-detail/order-detail",
     "pages/login/login",
-    "pages/address/address"
+    "pages/address/address",
+    "pages/address-edit/address-edit",
+    "pages/checkout/checkout",
+    "pages/pay-result/pay-result"
   ],
   "window": {
     "backgroundTextStyle": "dark",

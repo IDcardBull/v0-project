@@ -40,14 +40,16 @@
       </view>
     </view>
 
-    <button class="submit" bindtap="onLogin">登 录 / 注 册</button>
+    <button class="submit {{loading ? 'loading' : ''}}" disabled="{{loading}}" bindtap="onPhoneLogin">
+      {{loading ? '登录中...' : '登 录 / 注 册'}}
+    </button>
 
     <view class="agree">
       <text class="checkbox {{agree ? 'checked' : ''}}" bindtap="toggleAgree"></text>
       <text class="agree-text">登录即同意</text>
-      <text class="link">《用户协议》</text>
+      <text class="link" catchtap="showAgreement">《用户协议》</text>
       <text class="agree-text">与</text>
-      <text class="link">《隐私政策》</text>
+      <text class="link" catchtap="showPrivacy">《隐私政策》</text>
     </view>
   </view>
 

@@ -1,89 +1,90 @@
-<view class="container od-container">
-  <!-- 收货信息 -->
-  <view class="od-address card" bindtap="pickAddress">
-    <block wx:if="{{address}}">
-      <view class="od-addr-main">
-        <text class="od-addr-name">{{address.contact}}</text>
-        <text class="od-addr-phone">{{address.phone}}</text>
-      </view>
-      <view class="od-addr-line">{{address.province}} {{address.city}} {{address.detail}}</view>
-    </block>
-    <view wx:else class="od-addr-empty">+ 选择收货地址</view>
-    <text class="od-addr-arrow">›</text>
-  </view>
-
-  <!-- 订单状态（仅查看模式） -->
-  <view wx:if="{{mode === 'view' && order}}" class="od-status card">
-    <view class="od-status-title">{{order.statusText}}</view>
+<view class="container od-container" wx:if="{{order}}">
+  <!-- 状态条 -->
+  <view class="od-status">
+    <view class="od-status-title" style="color: {{order.statusColor}}">{{order.statusText}}</view>
     <view class="od-status-sub">
-      <text wx:if="{{order.status === 'unpaid'}}">请于 24 小时内完成付款</text>
-      <text wx:elif="{{order.status === 'paid'}}">工厂已收款，备货中</text>
-      <text wx:elif="{{order.status === 'shipped'}}">{{order.express}}</text>
-      <text wx:else>交易已完成，欢迎再次采购</text>
+      <text wx:if="{{order.status === 'pending'}}">请尽快完成支付</text>
+      <text wx:elif="{{order.status === 'paid'}}">商家正在备货</text>
+      <text wx:elif="{{order.status === 'shipped'}}">{{order.shippingCompany || '已发货'}}{{order.shippingNo ? ' · ' + order.shippingNo : ''}}</text>
+      <text wx:elif="{{order.status === 'completed'}}">交易已完成</text>
+      <text wx:elif="{{order.status === 'cancelled'}}">订单已取消</text>
     </view>
   </view>
 
-  <!-- 商品列表 -->
-  <view class="od-goods card">
-    <view class="od-goods-head">
-      <view class="od-factory-dot">央</view>
-      <text class="od-factory-name">央茗陶瓷自营工厂</text>
-      <text class="od-factory-ship">48h 内发货</text>
+  <!-- 收货地址 -->
+  <view class="od-address card">
+    <view class="od-addr-main">
+      <text class="od-addr-name">{{order.address.contact}}</text>
+      <text class="od-addr-phone">{{order.address.phone}}</text>
     </view>
-    <view wx:for="{{items}}" wx:key="id" class="od-goods-item">
-      <image src="{{item.image}}" class="od-goods-img" mode="aspectFill" />
+    <view class="od-addr-line">
+      {{order.address.province}}{{order.address.city}}{{order.address.district || ''}} {{order.address.detail}}
+    </view>
+  </view>
+
+  <!-- 商品 -->
+  <view class="od-goods card">
+    <view wx:for="{{order.items}}" wx:key="id" class="od-goods-item">
+      <image src="{{item.image}}" class="od-goods-img" mode="aspectFill" wx:if="{{item.image}}" />
+      <view class="od-goods-img cart-img-empty" wx:else>暂无图</view>
       <view class="od-goods-body">
         <view class="od-goods-name ellipsis-2">{{item.name}}</view>
-        <view class="od-goods-meta">¥{{item.price}}/{{item.unit}} × {{item.qty}}</view>
+        <view class="od-goods-spec" wx:if="{{item.spec}}">{{item.spec}}</view>
+        <view class="od-goods-meta">¥{{item.priceText}} × {{item.qty}}</view>
       </view>
-      <view class="od-goods-total">¥{{item.lineTotal}}</view>
+      <view class="od-goods-total">¥{{item.lineTotalText}}</view>
     </view>
 
     <view class="od-amount-row">
       <text>商品金额</text>
-      <text>¥{{goodsAmount}}</text>
+      <text>¥{{order.goodsAmountText}}</text>
     </view>
-    <view class="od-amount-row">
+    <view class="od-amount-row" wx:if="{{order.shippingFee}}">
       <text>运费</text>
-      <text class="od-ship-free">厂家包邮</text>
+      <text>¥{{order.shippingFeeText}}</text>
+    </view>
+    <view class="od-amount-row" wx:else>
+      <text>运费</text>
+      <text class="od-ship-free">包邮</text>
     </view>
     <view class="od-amount-row od-amount-row-final">
-      <text>应付金额</text>
-      <text class="od-total">¥{{totalAmount}}</text>
+      <text>实付金额</text>
+      <text class="od-total">¥{{order.totalAmountText}}</text>
     </view>
   </view>
 
-  <!-- 发票 / 备注 -->
+  <!-- 订单信息 -->
   <view class="od-meta card">
     <view class="od-meta-row">
-      <text class="od-meta-label">发票类型</text>
-      <text class="od-meta-value">增值税专用发票 ›</text>
+      <text class="od-meta-label">订单编号</text>
+      <view class="od-meta-value-wrap">
+        <text class="od-meta-value">{{order.orderNo || order.id}}</text>
+        <text class="od-copy" bindtap="copyOrderNo">复制</text>
+      </view>
     </view>
     <view class="od-meta-row">
-      <text class="od-meta-label">付款方式</text>
-      <text class="od-meta-value">对公转账 ›</text>
+      <text class="od-meta-label">下单时间</text>
+      <text class="od-meta-value">{{order.createdAtText}}</text>
     </view>
-    <view class="od-meta-row">
-      <text class="od-meta-label">交期要求</text>
-      <text class="od-meta-value">默认 48h 发货 ›</text>
+    <view class="od-meta-row" wx:if="{{order.paidAtText}}">
+      <text class="od-meta-label">支付时间</text>
+      <text class="od-meta-value">{{order.paidAtText}}</text>
     </view>
-  </view>
-
-  <view class="od-remark card">
-    <text class="od-meta-label">订单备注</text>
-    <textarea class="od-remark-input" value="{{remark}}" placeholder="如有特殊要求请备注，例如：刻字、定制 Logo 等" bindinput="onRemark" />
+    <view class="od-meta-row" wx:if="{{order.remark}}">
+      <text class="od-meta-label">订单备注</text>
+      <text class="od-meta-value">{{order.remark}}</text>
+    </view>
   </view>
 
   <view class="bar-placeholder"></view>
 
   <!-- 底部栏 -->
   <view class="bottom-bar">
-    <view class="bb-amount">
-      <text>合计</text>
-      <text class="bb-price">¥{{totalAmount}}</text>
-    </view>
-    <view wx:if="{{mode === 'new'}}" class="btn btn-danger bb-submit" bindtap="submitOrder">提交询价单</view>
-    <view wx:elif="{{order && order.status === 'unpaid'}}" class="btn btn-danger bb-submit">立即付款</view>
-    <view wx:else class="btn btn-outline bb-submit" bindtap="reorder">再次采购</view>
+    <view class="btn btn-outline bb-btn" bindtap="callService">联系客服</view>
+    <view wx:if="{{order.status === 'pending'}}" class="btn btn-outline bb-btn" bindtap="cancelOrder">取消订单</view>
+    <view wx:if="{{order.status === 'pending'}}" class="btn btn-danger bb-btn" bindtap="payNow">立即付款</view>
+    <view wx:if="{{order.status === 'shipped'}}" class="btn btn-primary bb-btn" bindtap="confirmReceive">确认收货</view>
   </view>
 </view>
+
+<view wx:elif="{{loading}}" class="empty"><text class="empty-sub">加载中…</text></view>

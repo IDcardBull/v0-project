@@ -1,27 +1,39 @@
-const { getTierPrice } = require('../../utils/products.js')
+// components/product-card/product-card.js
+// 列表卡片：纯展示 + 跳详情。批发的 SKU 选择 / 阶梯价 / 加入采购单全部在详情页完成。
+const { formatPrice } = require('../../utils/util.js')
 
 Component({
-  options: { multipleSlots: true },
-
   properties: {
     product: { type: Object, value: {} },
-    qty: { type: Number, value: 0 }
-  },
-
-  computed: {},
-
-  observers: {
-    'product, qty': function (product, qty) {
-      if (!product || !product.tiers) return
-      const useQty = qty > 0 ? qty : (product.minOrderQty || 1)
-      this.setData({
-        currentPrice: getTierPrice(product, useQty)
-      })
-    }
+    // 是否横排 list 风格（默认 true）。预留 grid 风格。
+    layout: { type: String, value: 'list' },
   },
 
   data: {
-    currentPrice: 0
+    priceText: '0.00',
+    salesText: '',
+    minQtyText: '',
+    coverUrl: '',
+    tagText: '',
+  },
+
+  observers: {
+    product(p) {
+      if (!p) return
+      const price = formatPrice(p.retailPrice)
+      const sales = p.salesCount > 0 ? `已售 ${p.salesCount}` : '暂无销量'
+      const minQty = p.minWholesaleQty && p.minWholesaleQty > 1
+        ? `≥ ${p.minWholesaleQty} 件起批`
+        : '1 件起批'
+      const tag = (p.tags && p.tags[0]) || ''
+      this.setData({
+        priceText: price,
+        salesText: sales,
+        minQtyText: minQty,
+        coverUrl: p.mainImage || '',
+        tagText: tag,
+      })
+    },
   },
 
   methods: {
@@ -30,35 +42,5 @@ Component({
       if (!id) return
       wx.navigateTo({ url: `/pages/detail/detail?id=${id}` })
     },
-    stopTap() { /* 阻止冒泡 */ },
-    onAddTap() {
-      const p = this.data.product
-      const app = getApp()
-      const qty = p.minOrderQty || 1
-      app.upsertCart({
-        id: p.id,
-        name: p.name,
-        image: p.image,
-        unit: p.unit,
-        qty,
-        price: getTierPrice(p, qty)
-      })
-      this.triggerEvent('change', { id: p.id, qty })
-      wx.showToast({ title: `已加入 ${qty} ${p.unit}`, icon: 'none' })
-    },
-    onQtyChange(e) {
-      const newQty = e.detail.value
-      const p = this.data.product
-      const app = getApp()
-      app.upsertCart({
-        id: p.id,
-        name: p.name,
-        image: p.image,
-        unit: p.unit,
-        qty: newQty,
-        price: getTierPrice(p, newQty)
-      })
-      this.triggerEvent('change', { id: p.id, qty: newQty })
-    }
-  }
+  },
 })

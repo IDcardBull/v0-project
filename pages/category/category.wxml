@@ -11,38 +11,40 @@
     <!-- 左侧一级分类 -->
     <scroll-view class="cat-left" scroll-y="{{true}}">
       <view
-        wx:for="{{categories}}"
+        wx:for="{{tree}}"
         wx:key="id"
+        wx:if="{{!item.parentId}}"
         class="cat-l-item {{activeCat === item.id ? 'active' : ''}}"
         data-id="{{item.id}}"
         bindtap="onCatTap"
       >{{item.name}}</view>
+      <view wx:if="{{tree.length === 0 && !loading}}" class="cat-l-empty">暂无分类</view>
     </scroll-view>
 
     <!-- 右侧内容 -->
     <scroll-view class="cat-right" scroll-y="{{true}}">
-      <!-- Banner -->
       <view class="cat-banner">
-        <view class="cat-banner-title">{{activeCatName}}</view>
+        <view class="cat-banner-title">{{activeCatName || '请选择分类'}}</view>
         <view class="cat-banner-sub">严选产区 · 厂家直发 · 48h 内发货</view>
       </view>
 
       <!-- 子分类宫格 -->
-      <view class="cat-grid">
+      <view class="cat-grid" wx:if="{{subCats.length > 0}}">
         <view
           wx:for="{{subCats}}"
-          wx:key="name"
+          wx:key="id"
           class="cat-grid-item"
-          data-name="{{item.name}}"
+          data-id="{{item.id}}"
           bindtap="onSubCatTap"
         >
           <view class="cat-grid-icon">{{item.icon}}</view>
-          <text class="cat-grid-name">{{item.name}}</text>
+          <text class="cat-grid-name ellipsis-2">{{item.name}}</text>
         </view>
       </view>
 
       <!-- 推荐商品 -->
       <view class="section-title">热销推荐</view>
+      <view wx:if="{{recList.length === 0}}" class="rec-empty">暂无推荐商品</view>
       <view class="rec-list">
         <view
           wx:for="{{recList}}"
@@ -51,10 +53,11 @@
           data-id="{{item.id}}"
           bindtap="goDetail"
         >
-          <image src="{{item.image}}" mode="aspectFill" class="rec-img" />
+          <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="rec-img" />
+          <view wx:else class="rec-img rec-img-empty">暂无图</view>
           <view class="rec-name ellipsis-2">{{item.name}}</view>
-          <view class="rec-price">¥{{item.price}}<text class="rec-unit">/{{item.unit}} 起</text></view>
-          <view class="rec-moq">≥{{item.minOrderQty}} {{item.unit}} 起批</view>
+          <view class="rec-price">¥{{item.price}}<text class="rec-unit"> 起</text></view>
+          <view class="rec-moq">≥{{item.minQty}} 件起批</view>
         </view>
       </view>
     </scroll-view>

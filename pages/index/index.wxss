@@ -87,4 +87,11 @@
 .empty-title { font-size: 30rpx; color: var(--text); }
 .empty-sub { font-size: 24rpx; color: var(--muted); margin-top: 8rpx; }
 
+.list-end {
+  text-align: center;
+  padding: 30rpx 0;
+  color: var(--muted);
+  font-size: 22rpx;
+}
+
 .safe-bottom { height: 40rpx; }
