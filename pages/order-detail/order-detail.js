@@ -1,91 +1,103 @@
-const { getOrderById } = require('../../utils/orders.js')
-const { formatMoney, genOrderNo } = require('../../utils/util.js')
+// pages/order-detail/order-detail.js
+const api = require('../../utils/api.js')
+const { formatPrice, statusText, statusColor, formatTime } = require('../../utils/util.js')
 
 Page({
   data: {
-    mode: 'new',     // 'new' 新建询价单 | 'view' 查看订单
+    orderId: '',
     order: null,
-    items: [],
-    goodsAmount: '0.00',
-    totalAmount: '0.00',
-    address: null,
-    remark: ''
+    loading: true,
   },
 
-  onLoad(opts) {
-    const mode = opts.mode || (opts.id ? 'view' : 'new')
-    let items = []
-    let order = null
-    if (mode === 'view') {
-      order = getOrderById(opts.id)
-      if (order) {
-        items = order.items.map(it => ({
-          ...it,
-          lineTotal: formatMoney(it.price * it.qty)
-        }))
-      }
-    } else {
-      items = (wx.getStorageSync('checkoutItems') || []).map(it => ({
+  onLoad(options = {}) {
+    if (!options.id) {
+      wx.showToast({ title: '参数错误', icon: 'none' })
+      return
+    }
+    this.setData({ orderId: options.id })
+    this.loadOrder()
+  },
+
+  onPullDownRefresh() {
+    this.loadOrder().finally(() => wx.stopPullDownRefresh())
+  },
+
+  async loadOrder() {
+    this.setData({ loading: true })
+    try {
+      const order = await api.order.detail(this.data.orderId)
+      const items = (order.items || []).map((it) => ({
         ...it,
-        lineTotal: formatMoney(it.price * it.qty)
+        priceText: formatPrice(it.price),
+        lineTotalText: formatPrice((Number(it.price) || 0) * (Number(it.qty) || 0)),
       }))
-    }
-    const goodsAmount = items.reduce((s, i) => s + i.price * i.qty, 0)
-    this.setData({
-      mode,
-      order,
-      items,
-      goodsAmount: formatMoney(goodsAmount),
-      totalAmount: formatMoney(goodsAmount),
-      address: wx.getStorageSync('defaultAddress') || null
-    })
-  },
-
-  onShow() {
-    const addr = wx.getStorageSync('defaultAddress')
-    if (addr) this.setData({ address: addr })
-  },
-
-  pickAddress() {
-    wx.navigateTo({ url: '/pages/address/address?pick=1' })
-  },
-
-  onRemark(e) {
-    this.setData({ remark: e.detail.value })
-  },
-
-  submitOrder() {
-    if (!this.data.address) {
-      return wx.showToast({ title: '请先选择收货地址', icon: 'none' })
-    }
-    if (this.data.items.length === 0) {
-      return wx.showToast({ title: '没有可提交的商品', icon: 'none' })
-    }
-    wx.showLoading({ title: '提交中...' })
-    setTimeout(() => {
-      wx.hideLoading()
-      // 清空采购单中已下单的商品
-      const app = getApp()
-      const ids = this.data.items.map(i => i.id)
-      app.globalData.cart = (app.globalData.cart || []).filter(c => !ids.includes(c.id))
-      wx.setStorageSync('cart', app.globalData.cart)
-      app.refreshTabBadge()
-      wx.showModal({
-        title: '询价单提交成功',
-        content: `单号 ${genOrderNo()}，专属商务将在 2 小时内联系您。`,
-        showCancel: false,
-        success: () => {
-          wx.switchTab({ url: '/pages/index/index' })
-        }
+      const totalQty = items.reduce((s, i) => s + (Number(i.qty) || 0), 0)
+      this.setData({
+        order: {
+          ...order,
+          items,
+          totalQty,
+          statusText: statusText(order.status),
+          statusColor: statusColor(order.status),
+          totalAmountText: formatPrice(order.totalAmount),
+          goodsAmountText: formatPrice(order.goodsAmount || order.totalAmount),
+          shippingFeeText: order.shippingFee ? formatPrice(order.shippingFee) : '0.00',
+          createdAtText: formatTime(order.createdAt),
+          paidAtText: order.paidAt ? formatTime(order.paidAt) : '',
+        },
       })
-    }, 600)
+    } finally {
+      this.setData({ loading: false })
+    }
   },
 
-  reorder() {
-    const app = getApp()
-    this.data.items.forEach(it => {
-      app.upsertCart({ id: it.id, name: it.name, image: it.image, unit: it.unit, qty: it.qty, price: it.price })
-    })
-    wx.switchTab({ url: '/pages/cart/cart' })
-  }
+  // 复制订单号
+  copyOrderNo() {
+    const no = (this.data.order && (this.data.order.orderNo || this.data.order.id)) || ''
+    wx.setClipboardData({ data: no })
+  },
+
+  // 立即付款
+  async payNow() {
+    try {
+      wx.showLoading({ title: '调起支付', mask: true })
+      const params = await api.order.repay(this.data.orderId)
+      wx.hideLoading()
+      await wx.requestPayment({
+        timeStamp: params.timeStamp,
+        nonceStr: params.nonceStr,
+        package: params.package,
+        signType: params.signType || 'RSA',
+        paySign: params.paySign,
+      })
+      wx.redirectTo({ url: `/pages/pay-result/pay-result?status=success&orderId=${this.data.orderId}` })
+    } catch (err) {
+      wx.hideLoading()
+      if (err && err.errMsg && err.errMsg.includes('cancel')) {
+        wx.showToast({ title: '已取消支付', icon: 'none' })
+      }
+    }
+  },
+
+  // 取消订单
+  async cancelOrder() {
+    const { confirm } = await wx.showModal({ title: '提示', content: '确认取消该订单？取消后不可恢复。' })
+    if (!confirm) return
+    await api.order.cancel(this.data.orderId)
+    wx.showToast({ title: '已取消', icon: 'success' })
+    this.loadOrder()
+  },
+
+  // 确认收货
+  async confirmReceive() {
+    const { confirm } = await wx.showModal({ title: '提示', content: '确认已收到货？' })
+    if (!confirm) return
+    await api.order.confirm(this.data.orderId)
+    wx.showToast({ title: '已确认', icon: 'success' })
+    this.loadOrder()
+  },
+
+  callService() {
+    wx.makePhoneCall({ phoneNumber: '4001888888' })
+  },
 })

@@ -76,6 +76,30 @@
   color: var(--muted);
   margin-top: 6rpx;
 }
+.o-item-spec {
+  font-size: 22rpx;
+  color: var(--muted);
+  margin-top: 4rpx;
+}
+.cart-img-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  font-size: 22rpx;
+}
+.o-more {
+  font-size: 22rpx;
+  color: var(--muted);
+  padding-left: 136rpx;
+  margin-top: -4rpx;
+}
+.list-end {
+  text-align: center;
+  padding: 30rpx 0;
+  color: var(--muted);
+  font-size: 22rpx;
+}
 
 .o-card-foot {
   display: flex;

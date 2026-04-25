@@ -42,9 +42,13 @@ const order = {
   create: (data) => http.post('/client/orders', data),
   list: (params) => http.get('/client/orders', params),
   statusCounts: () => http.get('/client/orders/status-counts'),
+  // 别名：页面里通常用 stats
+  stats: () => http.get('/client/orders/status-counts'),
   detail: (id) => http.get(`/client/orders/${id}`),
   cancel: (id) => http.patch(`/client/orders/${id}/cancel`),
   confirm: (id) => http.patch(`/client/orders/${id}/confirm`),
+  // 待付款订单重新调起支付
+  repay: (id) => http.post(`/client/pay/orders/${id}`),
 }
 
 // ---------- 微信支付 ----------

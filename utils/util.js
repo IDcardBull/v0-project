@@ -47,13 +47,17 @@ function pickTierPrice(qty, priceTiers, fallbackPrice) {
   return Number(hit ? hit.price : fallbackPrice) || 0
 }
 
-// 订单状态映射
+// 订单状态映射（兼容多种后端枚举命名）
 const ORDER_STATUS_MAP = {
+  pending: { text: '待付款', color: '#c84d3a' },
   pending_pay: { text: '待付款', color: '#c84d3a' },
+  paid: { text: '待发货', color: '#3c5a6f' },
   pending_ship: { text: '待发货', color: '#3c5a6f' },
-  shipped: { text: '已发货', color: '#3c5a6f' },
+  shipped: { text: '待收货', color: '#3c5a6f' },
   completed: { text: '已完成', color: '#888888' },
   after_sale: { text: '售后中', color: '#c84d3a' },
+  refunding: { text: '退款中', color: '#c84d3a' },
+  cancelled: { text: '已取消', color: '#888888' },
   closed: { text: '已关闭', color: '#888888' },
 }
 
@@ -82,6 +86,9 @@ module.exports = {
   pickTierPrice,
   orderStatusText,
   orderStatusColor,
+  // 别名（页面里通常这样调用）
+  statusText: orderStatusText,
+  statusColor: orderStatusColor,
   toIdStr,
   ORDER_STATUS_MAP,
 }

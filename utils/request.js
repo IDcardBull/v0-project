@@ -82,8 +82,13 @@ function request(options) {
   })
 }
 
+function isLogin() {
+  return !!wx.getStorageSync('token')
+}
+
 module.exports = {
   BASE_URL,
+  isLogin,
   get: (url, data, opts = {}) => request({ url, method: 'GET', data, ...opts }),
   post: (url, data, opts = {}) => request({ url, method: 'POST', data, ...opts }),
   put: (url, data, opts = {}) => request({ url, method: 'PUT', data, ...opts }),

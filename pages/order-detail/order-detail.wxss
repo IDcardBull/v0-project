@@ -80,7 +80,8 @@
 }
 .od-goods-body { flex: 1; min-width: 0; }
 .od-goods-name { font-size: 26rpx; color: var(--text); line-height: 1.35; }
-.od-goods-meta { font-size: 22rpx; color: var(--muted); margin-top: 8rpx; }
+.od-goods-spec { font-size: 22rpx; color: var(--muted); margin-top: 6rpx; }
+.od-goods-meta { font-size: 22rpx; color: var(--muted); margin-top: 6rpx; }
 .od-goods-total {
   align-self: flex-start;
   font-size: 28rpx;
@@ -117,7 +118,25 @@
 }
 .od-meta-row:last-child { border-bottom: none; }
 .od-meta-label { color: var(--text-2); }
-.od-meta-value { color: var(--text); }
+.od-meta-value { color: var(--text); font-size: 24rpx; }
+.od-meta-value-wrap { display: flex; align-items: center; gap: 16rpx; }
+.od-copy {
+  font-size: 22rpx;
+  color: var(--brand);
+  border: 2rpx solid var(--brand);
+  border-radius: 4rpx;
+  padding: 4rpx 12rpx;
+  line-height: 1;
+}
+.cart-img-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bbb;
+  font-size: 22rpx;
+}
+.empty { padding: 200rpx 0; text-align: center; }
+.empty-sub { font-size: 24rpx; color: var(--muted); }
 
 .od-remark-input {
   width: 100%;
@@ -153,3 +172,10 @@
 }
 .bb-price { font-size: 34rpx; font-weight: 700; color: var(--price); }
 .bb-submit { flex-shrink: 0; }
+.bb-btn {
+  height: 72rpx;
+  padding: 0 28rpx;
+  border-radius: 36rpx;
+  font-size: 26rpx;
+}
+.bottom-bar { justify-content: flex-end; }
