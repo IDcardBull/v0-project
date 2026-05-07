@@ -1,0 +1,88 @@
+<view class="container">
+  <!-- 收货地址 -->
+  <view class="address-card" bindtap="goAddress">
+    <block wx:if="{{address}}">
+      <view class="addr-line1">
+        <text class="addr-name">{{address.receiver}}</text>
+        <text class="addr-phone">{{address.phone}}</text>
+        <text wx:if="{{address.isDefault}}" class="addr-default">默认</text>
+      </view>
+      <view class="addr-line2">
+        {{address.province}}{{address.city}}{{address.district}} {{address.detail}}
+      </view>
+      <view class="addr-arrow">›</view>
+    </block>
+    <block wx:elif="{{addressLoading}}">
+      <view class="addr-empty">加载地址中…</view>
+    </block>
+    <block wx:else>
+      <view class="addr-empty">请添加收货地址</view>
+      <view class="addr-arrow">›</view>
+    </block>
+  </view>
+
+  <!-- 商品列表 -->
+  <view class="goods-card">
+    <view class="card-title">商品清单 · {{items.length}} 项</view>
+    <view wx:for="{{items}}" wx:key="skuId" class="goods-item">
+      <image
+        wx:if="{{item.skuImage}}"
+        src="{{item.skuImage}}"
+        mode="aspectFill"
+        class="goods-img"
+      />
+      <view wx:else class="goods-img goods-img-empty">暂无图</view>
+      <view class="goods-info">
+        <view class="goods-name ellipsis-2">{{item.productName}}</view>
+        <view class="goods-spec" wx:if="{{item.skuSpec}}">{{item.skuSpec}}</view>
+        <view class="goods-foot">
+          <text class="goods-price">¥{{item.unitPrice}}</text>
+          <text class="goods-qty">×{{item.qty}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 备注 -->
+  <view class="remark-card">
+    <text class="card-title">订单备注</text>
+    <input
+      class="remark-input"
+      placeholder="如有特殊要求请备注（选填）"
+      value="{{remark}}"
+      bindinput="onRemarkInput"
+      maxlength="200"
+    />
+  </view>
+
+  <!-- 金额明细 -->
+  <view class="amount-card">
+    <view class="amount-row">
+      <text>商品金额</text>
+      <text>¥{{goodsAmount}}</text>
+    </view>
+    <view class="amount-row">
+      <text>运费</text>
+      <text>{{freight === '0.00' ? '包邮' : '¥' + freight}}</text>
+    </view>
+    <view class="amount-divider"></view>
+    <view class="amount-row total">
+      <text>实付款</text>
+      <text class="amount-total">¥{{totalAmount}}</text>
+    </view>
+  </view>
+
+  <view class="bar-placeholder"></view>
+
+  <!-- 底部提交栏 -->
+  <view class="bottom-bar">
+    <view class="bb-left">
+      <text>实付</text>
+      <text class="bb-price">¥{{totalAmount}}</text>
+    </view>
+    <view
+      class="bb-submit {{submitting ? 'disabled' : ''}}"
+      bindtap="submit"
+    >{{submitting ? '提交中...' : '提交订单'}}</view>
+  </view>
+</view>

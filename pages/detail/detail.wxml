@@ -1,0 +1,118 @@
+<view class="container" wx:if="{{!loading && product}}">
+  <!-- 图片轮播 -->
+  <swiper class="d-swiper" indicator-dots="{{images.length > 1}}" circular="{{true}}"
+    indicator-color="rgba(255,255,255,.4)" indicator-active-color="#ffffff">
+    <block wx:for="{{images}}" wx:key="*this">
+      <swiper-item>
+        <image src="{{item}}" mode="aspectFill" class="d-swiper-img" />
+      </swiper-item>
+    </block>
+    <swiper-item wx:if="{{images.length === 0}}">
+      <view class="d-swiper-empty">暂无图片</view>
+    </swiper-item>
+  </swiper>
+
+  <!-- 价格区 -->
+  <view class="d-price-box">
+    <view class="d-price-main">
+      <text class="d-ccy">¥</text>
+      <text class="d-price">{{currentPrice}}</text>
+      <text class="d-unit">起</text>
+      <text class="d-moq">≥ {{minQty}} 件起批</text>
+    </view>
+    <view class="d-price-sub">
+      <text>已售 {{product.salesCount || 0}}</text>
+      <text wx:if="{{activeSku && activeSku.stock != null}}">库存 {{activeSku.stock}}</text>
+    </view>
+  </view>
+
+  <!-- 标题 -->
+  <view class="d-title-card">
+    <view class="d-title">{{product.name}}</view>
+    <view class="d-attrs" wx:if="{{product.craft || product.material}}">
+      <text wx:if="{{product.craft}}" class="tag">{{product.craft}}</text>
+      <text wx:if="{{product.material}}" class="tag">{{product.material}}</text>
+      <text wx:if="{{product.brand && product.brand.name}}" class="tag">{{product.brand.name}}</text>
+    </view>
+    <view class="d-sku">货号 {{product.code}}</view>
+  </view>
+
+  <!-- 已选规格 -->
+  <view class="d-section" wx:if="{{skus.length > 0}}">
+    <view class="d-section-title">规格</view>
+    <view wx:for="{{skuMap}}" wx:for-index="specName" wx:for-item="values" wx:key="specName" class="d-spec-group">
+      <view class="d-spec-label">{{specName}}</view>
+      <view class="d-spec-options">
+        <view
+          wx:for="{{values}}"
+          wx:for-item="val"
+          wx:key="*this"
+          class="d-spec-opt {{selectedSpec[specName] === val ? 'active' : ''}}"
+          data-name="{{specName}}"
+          data-value="{{val}}"
+          bindtap="onSpecTap"
+        >{{val}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 阶梯价 -->
+  <view class="d-section" wx:if="{{priceTiers.length > 0}}">
+    <view class="d-section-title">阶梯价</view>
+    <view class="d-tier-table">
+      <view
+        wx:for="{{priceTiers}}"
+        wx:key="minQty"
+        class="d-tier-row {{qty >= item.minQty && (item.maxQty == null || qty <= item.maxQty) ? 'active' : ''}}"
+      >
+        <view class="d-tier-range">
+          {{item.minQty}}{{item.maxQty ? '-' + item.maxQty : '+'}} 件
+        </view>
+        <view class="d-tier-price">¥{{item.price}}<text class="d-tier-unit">/件</text></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 数量 -->
+  <view class="d-section">
+    <view class="d-section-title">数量</view>
+    <view class="d-qty-row">
+      <quantity-stepper value="{{qty}}" min="{{minQty}}" bind:change="onQtyChange" />
+      <text class="d-qty-tip">至少 {{minQty}} 件起批</text>
+    </view>
+  </view>
+
+  <!-- 商品详情 -->
+  <view class="d-section">
+    <view class="d-section-title">商品详情</view>
+    <view class="d-desc" wx:if="{{detailHtml}}">
+      <rich-text nodes="{{detailHtml}}"></rich-text>
+    </view>
+    <view class="d-desc" wx:else>
+      <text class="d-desc-placeholder">商家暂未填写详情</text>
+    </view>
+  </view>
+
+  <view class="bar-placeholder"></view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <view class="bb-ic" bindtap="goHome">
+      <view class="bb-ic-dot">店</view>
+      <text>首页</text>
+    </view>
+    <view class="bb-ic" bindtap="callService">
+      <view class="bb-ic-dot">客</view>
+      <text>客服</text>
+    </view>
+    <view class="bb-ic" bindtap="goCart">
+      <view class="bb-ic-dot">单</view>
+      <text>采购单</text>
+    </view>
+    <view class="bb-action bb-cart" bindtap="onAddTap">加入采购单</view>
+    <view class="bb-action bb-buy" bindtap="onBuyTap">立即购买</view>
+  </view>
+</view>
+
+<view wx:elif="{{loading}}" class="d-loading">加载中…</view>
+<view wx:else class="d-loading">商品不存在</view>

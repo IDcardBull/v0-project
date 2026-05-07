@@ -1,0 +1,37 @@
+<view class="pc" bindtap="onCardTap">
+  <view class="pc-img">
+    <image
+      wx:if="{{coverUrl}}"
+      src="{{coverUrl}}"
+      mode="aspectFill"
+      class="pc-cover"
+      lazy-load="{{true}}"
+    />
+    <view wx:else class="pc-placeholder">暂无图</view>
+    <view wx:if="{{tagText}}" class="pc-badge">{{tagText}}</view>
+  </view>
+
+  <view class="pc-body">
+    <view class="pc-title ellipsis-2">{{product.name}}</view>
+
+    <view wx:if="{{product.brand && product.brand.name}}" class="pc-brand">
+      {{product.brand.name}}
+    </view>
+
+    <view class="pc-tags" wx:if="{{product.craft || product.material}}">
+      <text wx:if="{{product.craft}}" class="tag">{{product.craft}}</text>
+      <text wx:if="{{product.material}}" class="tag">{{product.material}}</text>
+    </view>
+
+    <view class="pc-moq">{{minQtyText}}</view>
+
+    <view class="pc-foot">
+      <view class="pc-price-wrap">
+        <text class="pc-price-currency">¥</text>
+        <text class="pc-price">{{priceText}}</text>
+        <text class="pc-unit">起</text>
+      </view>
+      <view class="pc-sales">{{salesText}}</view>
+    </view>
+  </view>
+</view>

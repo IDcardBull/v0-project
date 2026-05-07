@@ -1,0 +1,12 @@
+<view class="qs">
+  <view class="qs-btn" bindtap="dec">-</view>
+  <input
+    class="qs-input"
+    type="number"
+    value="{{value}}"
+    bindinput="onInput"
+    bindblur="onBlur"
+    confirm-type="done"
+  />
+  <view class="qs-btn" bindtap="inc">+</view>
+</view>

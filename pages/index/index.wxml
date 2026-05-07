@@ -1,0 +1,53 @@
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="top-bar">
+    <view class="search-box" bindtap="goSearch">
+      <view class="search-icon">搜</view>
+      <view class="search-placeholder">搜索陶瓷品名 / 货号 / 厂家</view>
+    </view>
+  </view>
+
+  <!-- 分类横滑 -->
+  <scroll-view class="cat-nav" scroll-x="true" enable-flex="{{true}}" show-scrollbar="{{false}}">
+    <view
+      wx:for="{{categories}}"
+      wx:key="id"
+      class="cat-item {{activeCat === item.id ? 'active' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onCatTap"
+    >
+      <text>{{item.name}}</text>
+      <view class="cat-indicator" wx:if="{{activeCat === item.id}}"></view>
+    </view>
+  </scroll-view>
+
+  <!-- 筛选条 -->
+  <view class="filter-bar">
+    <view
+      wx:for="{{sortOptions}}"
+      wx:key="id"
+      class="filter-item {{sortBy === item.id ? 'active' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="onSortTap"
+    >{{item.name}}</view>
+  </view>
+
+  <!-- 商品列表 -->
+  <view class="list">
+    <view wx:if="{{initialLoading}}" class="empty"><text class="empty-sub">加载中…</text></view>
+
+    <block wx:for="{{list}}" wx:key="id">
+      <product-card product="{{item}}" />
+    </block>
+
+    <view wx:if="{{!initialLoading && list.length === 0}}" class="empty">
+      <view class="empty-title">暂无匹配商品</view>
+      <view class="empty-sub">换个分类或排序试试</view>
+    </view>
+
+    <view wx:if="{{!hasMore && list.length > 0}}" class="list-end">— 没有更多了 —</view>
+    <view wx:if="{{loading && list.length > 0}}" class="list-end">加载中…</view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

@@ -1,0 +1,79 @@
+<view class="container cart-container">
+  <!-- 顶栏 -->
+  <view class="cart-head">
+    <view class="cart-head-title">采购单 · 共 {{totalQty}} 件</view>
+    <view class="cart-head-action" bindtap="toggleEdit">{{editing ? '完成' : '管理'}}</view>
+  </view>
+
+  <!-- 空态 -->
+  <view wx:if="{{list.length === 0}}" class="empty">
+    <view class="empty-icon">采</view>
+    <view class="empty-title">采购单空空如也</view>
+    <view class="empty-sub">前往批发大厅选购优质陶瓷</view>
+    <view class="btn btn-primary empty-btn" bindtap="goIndex">去批发大厅</view>
+  </view>
+
+  <!-- 列表 -->
+  <view wx:else class="cart-list">
+    <view wx:for="{{list}}" wx:key="skuId" class="cart-item">
+      <view class="cart-check {{item.selected ? 'checked' : ''}}" data-skuid="{{item.skuId}}" bindtap="toggleSelect">
+        <text wx:if="{{item.selected}}">✓</text>
+      </view>
+
+      <image
+        wx:if="{{item.skuImage}}"
+        src="{{item.skuImage}}"
+        class="cart-img"
+        mode="aspectFill"
+        data-pid="{{item.productId}}"
+        bindtap="goDetail"
+      />
+      <view wx:else class="cart-img cart-img-empty" data-pid="{{item.productId}}" bindtap="goDetail">暂无图</view>
+
+      <view class="cart-info">
+        <view class="cart-name ellipsis-2" data-pid="{{item.productId}}" bindtap="goDetail">{{item.productName}}</view>
+        <view class="cart-spec" wx:if="{{item.skuSpec}}">{{item.skuSpec}}</view>
+        <view class="cart-tier">当前档位 ¥{{item.unitPrice}}</view>
+
+        <view class="cart-foot">
+          <view class="cart-price-wrap">
+            <text class="cart-ccy">¥</text>
+            <text class="cart-price">{{item.lineTotal}}</text>
+          </view>
+          <quantity-stepper
+            value="{{item.qty}}"
+            min="{{1}}"
+            data-skuid="{{item.skuId}}"
+            bind:change="onQtyChange"
+          />
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 占位 -->
+  <view wx:if="{{list.length > 0}}" class="bar-placeholder"></view>
+
+  <!-- 底部结算栏 -->
+  <view wx:if="{{list.length > 0}}" class="bottom-bar">
+    <view class="bb-left">
+      <view class="bb-check {{allSelected ? 'checked' : ''}}" bindtap="toggleAll">
+        <text wx:if="{{allSelected}}">✓</text>
+      </view>
+      <text>全选</text>
+    </view>
+
+    <view class="bb-amount">
+      <block wx:if="{{!editing}}">
+        <text>合计</text>
+        <text class="bb-price">¥{{selectedAmount}}</text>
+      </block>
+      <block wx:else>
+        <text>已选 {{selectedCount}} 件</text>
+      </block>
+    </view>
+
+    <view wx:if="{{!editing}}" class="btn btn-danger bb-btn" bindtap="checkout">去结算 ({{selectedCount}})</view>
+    <view wx:else class="btn btn-outline bb-btn" bindtap="removeSelected">删除</view>
+  </view>
+</view>

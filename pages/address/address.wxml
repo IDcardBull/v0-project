@@ -1,0 +1,34 @@
+<view class="page">
+  <block wx:if="{{list.length}}">
+    <view class="list">
+      <view class="addr" wx:for="{{list}}" wx:key="id">
+        <view class="addr-main" bindtap="onSelect" data-id="{{item.id}}">
+          <view class="row-top">
+            <text class="name">{{item.receiver}}</text>
+            <text class="phone">{{item.phone}}</text>
+            <text class="tag default" wx:if="{{item.isDefault}}">默认</text>
+            <text class="tag" wx:if="{{item.tag}}">{{item.tag}}</text>
+          </view>
+          <view class="detail">
+            {{item.province}}{{item.city}}{{item.district}} {{item.detail}}
+          </view>
+        </view>
+        <view class="addr-actions" wx:if="{{!pickerMode}}">
+          <view class="action" bindtap="setDefault" data-id="{{item.id}}" wx:if="{{!item.isDefault}}">设为默认</view>
+          <view class="action" bindtap="edit" data-id="{{item.id}}">编辑</view>
+          <view class="action danger" bindtap="remove" data-id="{{item.id}}">删除</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="empty" wx:elif="{{!loading}}">
+    <view class="empty-icon">地</view>
+    <view class="empty-text">暂无收货地址</view>
+    <view class="empty-sub">添加地址后可快速下单</view>
+  </view>
+
+  <view class="bottom-bar">
+    <view class="add-btn" bindtap="add">+ 新增收货地址</view>
+  </view>
+</view>

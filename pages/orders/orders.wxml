@@ -1,0 +1,63 @@
+<view class="container">
+  <!-- Tab 切换 -->
+  <view class="o-tabs">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="id"
+      class="o-tab {{activeTab === item.id ? 'active' : ''}}"
+      data-id="{{item.id}}"
+      bindtap="switchTab"
+    >
+      {{item.name}}
+      <view class="o-tab-bar" wx:if="{{activeTab === item.id}}"></view>
+    </view>
+  </view>
+
+  <!-- 订单列表 -->
+  <view class="o-list">
+    <view wx:if="{{initialLoading}}" class="empty"><text class="empty-sub">加载中…</text></view>
+
+    <block wx:for="{{list}}" wx:key="id" wx:for-item="order">
+      <view class="o-card" data-id="{{order.id}}" bindtap="goDetail">
+        <view class="o-card-head">
+          <text class="o-id">单号 {{order.orderNo || order.id}}</text>
+          <text class="o-status" style="color: {{order.statusColor}}">{{order.statusText}}</text>
+        </view>
+
+        <view class="o-items">
+          <view wx:for="{{order.itemsPreview}}" wx:for-item="it" wx:key="id" class="o-item">
+            <image src="{{it.image}}" class="o-item-img" mode="aspectFill" wx:if="{{it.image}}" />
+            <view class="o-item-img cart-img-empty" wx:else>暂无图</view>
+            <view class="o-item-body">
+              <view class="o-item-name ellipsis-2">{{it.name}}</view>
+              <view class="o-item-spec" wx:if="{{it.spec}}">{{it.spec}}</view>
+              <view class="o-item-meta">¥{{it.priceText}} × {{it.qty}}</view>
+            </view>
+          </view>
+          <view wx:if="{{order.moreCount > 0}}" class="o-more">…等共 {{order.itemsPreview.length + order.moreCount}} 件商品</view>
+        </view>
+
+        <view class="o-card-foot">
+          <view class="o-amount">
+            共 {{order.totalQty}} 件 · 合计
+            <text class="o-amount-price">¥{{order.totalAmountText}}</text>
+          </view>
+          <view class="o-actions" catchtap="noop">
+            <view wx:if="{{order.isPendingPay}}" class="btn btn-outline o-btn" data-id="{{order.id}}" catchtap="cancelOrder">取消</view>
+            <view wx:if="{{order.isPendingPay}}" class="btn btn-danger o-btn" data-id="{{order.id}}" catchtap="payNow">去付款</view>
+            <view wx:if="{{order.isShipped}}" class="btn btn-primary o-btn" data-id="{{order.id}}" catchtap="confirmReceive">确认收货</view>
+          </view>
+        </view>
+      </view>
+    </block>
+
+    <view wx:if="{{!initialLoading && list.length === 0}}" class="empty">
+      <view class="empty-title">暂无相关订单</view>
+      <view class="empty-sub">去批发大厅下一单吧</view>
+    </view>
+
+    <view wx:if="{{!hasMore && list.length > 0}}" class="list-end">— 没有更多了 —</view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>
