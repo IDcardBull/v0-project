@@ -54,6 +54,13 @@
         >{{val}}</view>
       </view>
     </view>
+    <view class="d-sku-preview" wx:if="{{activeSkuImage}}">
+      <image src="{{activeSkuImage}}" mode="aspectFill" class="d-sku-preview-img" />
+      <view class="d-sku-preview-info">
+        <view class="d-sku-preview-title">当前规格图片</view>
+        <view class="d-sku-preview-text">下到采购单与确认页时将使用这张规格图，便于客服按图核对。</view>
+      </view>
+    </view>
   </view>
 
   <!-- 阶梯价 -->
@@ -109,8 +116,7 @@
       <view class="bb-ic-dot">单</view>
       <text>采购单</text>
     </view>
-    <view class="bb-action bb-cart" bindtap="onAddTap">加入采购单</view>
-    <view class="bb-action bb-buy" bindtap="onBuyTap">立即购买</view>
+    <view class="bb-action bb-cart bb-cart-full" bindtap="onAddTap">加入采购单</view>
   </view>
 </view>
 

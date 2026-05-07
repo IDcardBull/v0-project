@@ -45,10 +45,10 @@
 
   <!-- 备注 -->
   <view class="remark-card">
-    <text class="card-title">订单备注</text>
+    <text class="card-title">采购备注</text>
     <input
       class="remark-input"
-      placeholder="如有特殊要求请备注（选填）"
+      placeholder="如有规格、交期、发票等要求请备注（选填）"
       value="{{remark}}"
       bindinput="onRemarkInput"
       maxlength="200"
@@ -62,12 +62,12 @@
       <text>¥{{goodsAmount}}</text>
     </view>
     <view class="amount-row">
-      <text>运费</text>
+      <text>预估运费</text>
       <text>{{freight === '0.00' ? '包邮' : '¥' + freight}}</text>
     </view>
     <view class="amount-divider"></view>
     <view class="amount-row total">
-      <text>实付款</text>
+      <text>预估合计</text>
       <text class="amount-total">¥{{totalAmount}}</text>
     </view>
   </view>
@@ -77,12 +77,12 @@
   <!-- 底部提交栏 -->
   <view class="bottom-bar">
     <view class="bb-left">
-      <text>实付</text>
+      <text>预估合计</text>
       <text class="bb-price">¥{{totalAmount}}</text>
     </view>
     <view
       class="bb-submit {{submitting ? 'disabled' : ''}}"
       bindtap="submit"
-    >{{submitting ? '提交中...' : '提交订单'}}</view>
+    >{{submitting ? '提交中...' : '提交采购单'}}</view>
   </view>
 </view>

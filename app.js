@@ -10,6 +10,8 @@ const DEFAULT_SITE_CONFIG = {
   agreementUrl: '',             // 用户协议 URL
   privacyUrl: '',               // 隐私政策 URL
   freeShippingThreshold: 0,     // 满 X 元包邮，0 = 关闭
+  wecomBotKey: '',              // 企业微信机器人 key（用于B2B采购单通知）
+  wecomWebhookKey: '',          // 兼容字段：企业微信机器人 key
   about: '',                    // 关于我们文本
 }
 
@@ -64,6 +66,16 @@ App({
   // 获取站点配置（任意页面调用）
   getSiteConfig() {
     return this.globalData.siteConfig || DEFAULT_SITE_CONFIG
+  },
+
+  // 企业微信机器人 key（优先后端站点配置，兼容本地调试配置）
+  getWecomBotKey() {
+    const cfg = this.getSiteConfig()
+    return cfg.wecomBotKey || cfg.wecomWebhookKey || wx.getStorageSync('wecom_bot_key') || ''
+  },
+
+  setWecomBotKey(key) {
+    if (key) wx.setStorageSync('wecom_bot_key', key)
   },
 
   // 统一的"联系客服"入口
@@ -133,7 +145,5 @@ App({
     version: '',
     envVersion: '',
     siteConfig: { ...DEFAULT_SITE_CONFIG },
-    // 「立即购买」临时载荷：详情页 -> checkout，避免冗长 URL 参数
-    buyNowPayload: null,
   },
 })

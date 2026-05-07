@@ -7,11 +7,11 @@ const {
   normalizeOrderStatus,
   isOrderStatus,
 } = require('../../utils/util.js')
-const { USE_FAKE_PAY, requestPayment, getDisplayOrderStatus, markOrderFakePaid } = require('../../utils/pay.js')
+const { getDisplayOrderStatus } = require('../../utils/pay.js')
 
 const TABS = [
   { id: '',          name: '全部' },
-  { id: 'pending',   name: '待付款' },
+  { id: 'pending',   name: '待确认' },
   { id: 'paid',      name: '待发货' },
   { id: 'shipped',   name: '待收货' },
   { id: 'completed', name: '已完成' },
@@ -126,7 +126,7 @@ Page({
         status: displayStatus,
         id: o.id || o.orderId,
         normalizedStatus,
-        isPendingPay: isOrderStatus(displayStatus, 'pending'),
+        isPendingConfirm: isOrderStatus(displayStatus, 'pending'),
         isShipped: isOrderStatus(displayStatus, 'shipped'),
         statusText: statusText(displayStatus),
         statusColor: statusColor(displayStatus),
@@ -153,24 +153,11 @@ Page({
     wx.navigateTo({ url: `/pages/order-detail/order-detail?id=${id}` })
   },
 
-  // 直接付款（待付款）
-  async payNow(e) {
+  // B2B 采购单无需线上支付，如需加急可直接联系客服。
+  contactService(e) {
     e.stopPropagation && e.stopPropagation()
-    const id = e.currentTarget.dataset.id
-    try {
-      wx.showLoading({ title: USE_FAKE_PAY ? '模拟支付' : '调起支付', mask: true })
-      const params = USE_FAKE_PAY ? {} : await api.order.repay(id)
-      wx.hideLoading()
-      await requestPayment(params, id)
-      if (USE_FAKE_PAY) markOrderFakePaid(id)
-      wx.showToast({ title: '支付成功', icon: 'success' })
-      this.refresh()
-    } catch (err) {
-      wx.hideLoading()
-      if (err && err.errMsg && err.errMsg.includes('cancel')) {
-        wx.showToast({ title: '已取消支付', icon: 'none' })
-      }
-    }
+    const app = getApp()
+    if (app && typeof app.callCustomerService === 'function') app.callCustomerService()
   },
 
   // 取消订单

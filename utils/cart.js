@@ -42,7 +42,14 @@ function add(payload) {
   const list = load()
   const idx = list.findIndex((i) => Number(i.skuId) === Number(payload.skuId))
   if (idx >= 0) {
-    list[idx].qty += payload.qty || 1
+    // 同一 SKU 再次加入时，除数量累加外同步最新快照，避免后台更新 SKU 图片后采购单仍显示旧图。
+    const nextQty = Number(list[idx].qty || 0) + Number(payload.qty || 1)
+    list[idx] = {
+      ...list[idx],
+      ...payload,
+      selected: list[idx].selected !== false,
+      qty: nextQty,
+    }
   } else {
     list.push({
       selected: true,

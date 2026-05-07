@@ -131,10 +131,10 @@ function pickTierPrice(qty, priceTiers, fallbackPrice) {
 
 // 订单状态映射（兼容多种后端枚举命名）
 const ORDER_STATUS_MAP = {
-  pending: { text: '待付款', color: '#c84d3a' },
-  pending_pay: { text: '待付款', color: '#c84d3a' },
-  pendingPay: { text: '待付款', color: '#c84d3a' },
-  unpaid: { text: '待付款', color: '#c84d3a' },
+  pending: { text: '待客服确认', color: '#c84d3a' },
+  pending_pay: { text: '待客服确认', color: '#c84d3a' },
+  pendingPay: { text: '待客服确认', color: '#c84d3a' },
+  unpaid: { text: '待客服确认', color: '#c84d3a' },
   paid: { text: '待发货', color: '#3c5a6f' },
   pending_ship: { text: '待发货', color: '#3c5a6f' },
   pendingShip: { text: '待发货', color: '#3c5a6f' },
@@ -150,7 +150,7 @@ const ORDER_STATUS_MAP = {
 }
 
 const ORDER_STATUS_GROUPS = {
-  pending: ['pending', 'pending_pay', 'pendingPay', 'unpaid'],
+  pending: ['pending', 'pending_pay', 'pendingPay', 'unpaid'], // B2B语义：已提交采购单，待客服确认
   paid: ['paid', 'pending_ship', 'pendingShip'],
   shipped: ['shipped', 'delivered'],
   completed: ['completed'],

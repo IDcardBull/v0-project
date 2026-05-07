@@ -59,7 +59,7 @@ Page({
         next.push({
           ...item,
           productName: product.name || item.productName,
-          skuImage: (sku && sku.image) || product.mainImage || item.skuImage,
+          skuImage: (sku && (sku.image || sku.skuImage || sku.sku_image || sku.imageUrl || sku.image_url || sku.mainImage)) || product.mainImage || item.skuImage,
           retailPrice: basePrice,
           priceTiers: tiers,
           unitPrice,
@@ -157,7 +157,6 @@ Page({
     }
     const ok = await this.validateSelectedItems(selected)
     if (!ok) return
-    app.globalData.buyNowPayload = null
     wx.navigateTo({ url: '/pages/checkout/checkout?from=cart' })
   },
 })

@@ -9,12 +9,12 @@ const {
   pickTierPrice,
 } = require('../../utils/util.js')
 const { isProductVisible, orderChannelPayload } = require('../../utils/channel.js')
-const { USE_FAKE_PAY, requestPayment, markOrderFakePaid } = require('../../utils/pay.js')
+const wecomBot = require('../../utils/wecom-bot.js')
 const app = getApp()
 
 Page({
   data: {
-    from: 'cart',           // 'cart' | 'buynow'
+    from: 'cart',           // B2B图册采购固定从采购单进入
     items: [],              // 待结算商品
     address: null,          // 收货地址
     addressLoading: true,
@@ -25,9 +25,8 @@ Page({
     submitting: false,
   },
 
-  onLoad(options) {
-    const from = options.from || 'cart'
-    this.setData({ from })
+  onLoad() {
+    this.setData({ from: 'cart' })
     this.loadItems()
   },
 
@@ -35,25 +34,19 @@ Page({
     this.loadDefaultAddress()
   },
 
-  // 加载商品（从 buyNow payload 或购物车选中项）
+  // 加载商品（固定从采购单选中项读取）
   loadItems() {
-    let items = []
-    if (this.data.from === 'buynow') {
-      const payload = app.globalData.buyNowPayload
-      if (payload && payload.items) items = payload.items
-    } else {
-      items = cartStore.selectedItems().map((i) => ({
-        skuId: i.skuId,
-        productId: i.productId,
-        productName: i.productName,
-        skuSpec: i.skuSpec,
-        skuImage: i.skuImage,
-        unitPrice: Number(i.unitPrice),
-        retailEnabled: i.retailEnabled === true,
-        wholesaleEnabled: i.wholesaleEnabled === true,
-        qty: Number(i.qty),
-      }))
-    }
+    const items = cartStore.selectedItems().map((i) => ({
+      skuId: i.skuId,
+      productId: i.productId,
+      productName: i.productName,
+      skuSpec: i.skuSpec,
+      skuImage: i.skuImage,
+      unitPrice: Number(i.unitPrice),
+      retailEnabled: i.retailEnabled === true,
+      wholesaleEnabled: i.wholesaleEnabled === true,
+      qty: Number(i.qty),
+    }))
 
     if (!items.length) {
       wx.showToast({ title: '没有可结算的商品', icon: 'none' })
@@ -126,12 +119,8 @@ Page({
     }
 
     if (invalidSkuIds.length) {
-      if (this.data.from === 'cart') {
-        cartStore.removeMany(invalidSkuIds)
-        app.refreshCartBadge()
-      } else {
-        app.globalData.buyNowPayload = null
-      }
+      cartStore.removeMany(invalidSkuIds)
+      app.refreshCartBadge()
       wx.showToast({ title: '存在当前渠道不可购买商品', icon: 'none' })
       setTimeout(() => wx.navigateBack(), 800)
       return false
@@ -158,7 +147,7 @@ Page({
         next.push({
           ...item,
           productName: product.name || item.productName,
-          skuImage: (sku && sku.image) || product.mainImage || item.skuImage,
+          skuImage: (sku && (sku.image || sku.skuImage || sku.sku_image || sku.imageUrl || sku.image_url || sku.mainImage)) || item.skuImage || product.mainImage || '',
           unitPrice,
           retailPrice: basePrice,
           priceTiers: tiers,
@@ -171,14 +160,51 @@ Page({
     }
 
     if (invalidSkuIds.length) {
-      if (this.data.from === 'cart') cartStore.removeMany(invalidSkuIds)
+      cartStore.removeMany(invalidSkuIds)
       return []
     }
 
     return next
   },
 
-  // 提交订单 -> 调起微信支付
+  formatAddress(address) {
+    if (!address) return ''
+    return [address.province, address.city, address.district, address.detail || address.address]
+      .filter(Boolean)
+      .join('')
+  },
+
+  async sendWecomNotify(order, latestItems, address, remark) {
+    try {
+      const userInfo = wx.getStorageSync('userInfo') || {}
+      const orderInfo = {
+        orderNo: order.orderNo || order.order_no || order.id || order.orderId,
+          customerName: address.contact || address.receiver || address.name || userInfo.nickname || '',
+          customerPhone: address.phone || address.mobile || userInfo.phone || '',
+          address: this.formatAddress(address),
+        companyName: userInfo.companyName || userInfo.company || '',
+          items: latestItems.map((i) => ({
+          name: i.productName,
+          skuSpec: i.skuSpec,
+          skuImage: i.skuImage,
+          qty: i.qty,
+          price: i.unitPrice,
+        })),
+        subtotal: Number(this.data.goodsAmount || 0),
+        freight: Number(this.data.freight || 0),
+        total: Number(this.data.totalAmount || 0),
+        remark: remark || '',
+        time: new Date().toLocaleString(),
+      }
+      await wecomBot.submitPurchase(orderInfo)
+      return true
+    } catch (e) {
+      console.warn('send wecom purchase notify failed:', e)
+      return false
+    }
+  },
+
+  // 提交采购单：B2B 不调起微信支付，提交后通知企业微信客服群
   async submit() {
     const { address, items, remark, submitting } = this.data
     if (submitting) return
@@ -197,7 +223,7 @@ Page({
     if (!valid) return
 
     this.setData({ items: latestItems, submitting: true })
-    wx.showLoading({ title: '提交订单...', mask: true })
+    wx.showLoading({ title: '提交采购单...', mask: true })
 
     try {
       const order = await api.order.create(orderChannelPayload({
@@ -206,36 +232,28 @@ Page({
         remark: remark || '',
       }))
 
+      const notified = await this.sendWecomNotify(order, latestItems, address, remark)
       wx.hideLoading()
-      // 下单成功后立即清理购物车里的对应项（仅购物车下单）
-      if (this.data.from === 'cart') {
-        cartStore.removeMany(latestItems.map((i) => i.skuId))
-        app.refreshCartBadge()
-      } else {
-        app.globalData.buyNowPayload = null
-      }
 
-      // 调起支付
-      await this.payOrder(order.id || order.orderId)
+      // 提交成功后立即清理购物车里的对应项
+      cartStore.removeMany(latestItems.map((i) => i.skuId))
+      app.refreshCartBadge()
+
+      wx.showModal({
+        title: '采购单已提交',
+        content: notified
+          ? '采购单已发送给客服，客服会尽快联系企业确认规格、数量、交期和结算方式。'
+          : '采购单已生成，但企微机器人暂未配置或发送失败，请客服在后台查看订单并主动对接。',
+        showCancel: false,
+        success: () => {
+          wx.redirectTo({ url: `/pages/order-detail/order-detail?id=${toIdStr(order.id || order.orderId)}` })
+        },
+      })
     } catch (e) {
       wx.hideLoading()
       // 已 toast
     } finally {
       this.setData({ submitting: false })
-    }
-  },
-
-  async payOrder(orderId) {
-    try {
-      wx.showLoading({ title: USE_FAKE_PAY ? '模拟支付...' : '调起支付...', mask: true })
-      const params = USE_FAKE_PAY ? {} : await api.pay.requestPayParams(orderId)
-      wx.hideLoading()
-      await requestPayment(params, orderId)
-      if (USE_FAKE_PAY) markOrderFakePaid(orderId)
-      wx.redirectTo({ url: `/pages/pay-result/pay-result?orderId=${toIdStr(orderId)}&status=success${USE_FAKE_PAY ? '&fake=1' : ''}` })
-    } catch (e) {
-      wx.hideLoading()
-      wx.redirectTo({ url: `/pages/pay-result/pay-result?orderId=${toIdStr(orderId)}&status=cancel` })
     }
   },
 })

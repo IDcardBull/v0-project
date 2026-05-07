@@ -17,10 +17,12 @@ Page({
     productId: 0,
     product: null,
     images: [],
+    productImages: [],
     skus: [],
     skuMap: {},          // {规格名: [可选值]}
     selectedSpec: {},    // {规格名: 选中值}
     activeSku: null,
+    activeSkuImage: '',
     qty: 1,
     minQty: 1,
     currentPrice: '0.00',
@@ -54,10 +56,13 @@ Page({
         return
       }
 
-      // 图片：mainImage + images 数组
+      // 图片：商品基础图 + 当前 SKU 图。规格切换时会把选中 SKU 图置为轮播首图。
       const images = []
-      if (p.mainImage) images.push(p.mainImage)
-      if (Array.isArray(p.images)) images.push(...p.images)
+      const pushImage = (url) => {
+        if (url && !images.includes(url)) images.push(url)
+      }
+      pushImage(p.mainImage)
+      if (Array.isArray(p.images)) p.images.forEach(pushImage)
 
       // SKU 规格归类
       const skus = (p.skus || []).filter((s) => s.status === 1)
@@ -81,6 +86,7 @@ Page({
       this.setData({
         product: p,
         images,
+        productImages: images,
         skus,
         skuMap,
         selectedSpec,
@@ -96,6 +102,22 @@ Page({
     } finally {
       this.setData({ loading: false })
     }
+  },
+
+  getSkuImage(sku, product) {
+    return (sku && (sku.image || sku.skuImage || sku.sku_image || sku.imageUrl || sku.image_url || sku.mainImage))
+      || (product && (product.mainImage || (Array.isArray(product.images) && product.images[0])))
+      || ''
+  },
+
+  buildDisplayImages(skuImage, baseImages) {
+    const images = []
+    const pushImage = (url) => {
+      if (url && !images.includes(url)) images.push(url)
+    }
+    pushImage(skuImage)
+    ;(baseImages || []).forEach(pushImage)
+    return images
   },
 
   // 根据当前 selectedSpec 匹配 SKU
@@ -116,9 +138,12 @@ Page({
     const tiers = getSkuPriceTiers(matched, product)
     const fallbackPrice = matched ? getBasePrice(matched) : getBasePrice(product)
     const price = pickTierPrice(qty, tiers, fallbackPrice)
+    const activeSkuImage = this.getSkuImage(matched, product)
 
     this.setData({
       activeSku: matched,
+      activeSkuImage,
+      images: this.buildDisplayImages(activeSkuImage, this.data.productImages),
       priceTiers: tiers,
       currentPrice: formatPrice(price),
     })
@@ -135,12 +160,9 @@ Page({
     this.setData({ qty }, () => this.matchSku())
   },
 
-  // ---- 加入采购单 ----
+  // ---- 图册采购：只加入采购单，统一到采购单页面提交 ----
   onAddTap() {
     this.addToCart()
-  },
-  onBuyTap() {
-    this.buyNow()
   },
 
   addToCart() {
@@ -171,7 +193,7 @@ Page({
       productId: product.id,
       productName: product.name,
       skuSpec,
-      skuImage: activeSku.image || product.mainImage,
+      skuImage: this.getSkuImage(activeSku, product),
       retailPrice: getBasePrice(activeSku),
       memberPrice: activeSku.memberPrice ? Number(activeSku.memberPrice) : null,
       priceTiers: priceTiers,
@@ -187,50 +209,6 @@ Page({
     wx.showToast({ title: '已加入采购单', icon: 'success' })
   },
 
-  // ---- 立即购买 ----
-  buyNow() {
-    const { activeSku, qty, minQty, product, priceTiers, currentPrice } = this.data
-    if (!app.ensureLogin()) return
-
-    if (!activeSku) {
-      wx.showToast({ title: '请选择规格', icon: 'none' })
-      return
-    }
-    if (qty < minQty) {
-      wx.showToast({ title: `至少 ${minQty} 件起批`, icon: 'none' })
-      return
-    }
-    if (activeSku.stock != null && qty > activeSku.stock) {
-      wx.showToast({ title: '库存不足', icon: 'none' })
-      return
-    }
-    if (!isProductVisible(product)) {
-      wx.showToast({ title: '商品不支持当前渠道购买', icon: 'none' })
-      return
-    }
-
-    const skuSpec = Object.entries(activeSku.specs || {})
-      .map(([k, v]) => `${k}:${v}`)
-      .join(' / ')
-
-    // 把单条立即购买的 payload 暂存到 globalData，避免 URL 过长
-    app.globalData.buyNowPayload = {
-      items: [
-        {
-          skuId: activeSku.id,
-          productId: product.id,
-          productName: product.name,
-          skuSpec,
-          skuImage: activeSku.image || product.mainImage,
-          unitPrice: Number(currentPrice),
-          retailEnabled: product.retailEnabled === true,
-          wholesaleEnabled: product.wholesaleEnabled === true,
-          qty,
-        },
-      ],
-    }
-    wx.navigateTo({ url: '/pages/checkout/checkout?from=buynow' })
-  },
 
   callService() {
     app.callCustomerService()

@@ -7,7 +7,7 @@ const {
   formatTime,
   isOrderStatus,
 } = require('../../utils/util.js')
-const { USE_FAKE_PAY, requestPayment, getDisplayOrderStatus, markOrderFakePaid } = require('../../utils/pay.js')
+const { getDisplayOrderStatus } = require('../../utils/pay.js')
 const app = getApp()
 
 Page({
@@ -66,7 +66,7 @@ Page({
           shippedAtText,
           statusText: statusText(displayStatus),
           statusColor: statusColor(displayStatus),
-          isPendingPay: isOrderStatus(displayStatus, 'pending'),
+          isPendingConfirm: isOrderStatus(displayStatus, 'pending'),
           isPaid: isOrderStatus(displayStatus, 'paid'),
           canEditAddress: isOrderStatus(displayStatus, 'pending') || isOrderStatus(displayStatus, 'paid'),
           isShipped: isOrderStatus(displayStatus, 'shipped'),
@@ -90,22 +90,6 @@ Page({
     wx.setClipboardData({ data: no })
   },
 
-  // 立即付款
-  async payNow() {
-    try {
-      wx.showLoading({ title: USE_FAKE_PAY ? '模拟支付' : '调起支付', mask: true })
-      const params = USE_FAKE_PAY ? {} : await api.order.repay(this.data.orderId)
-      wx.hideLoading()
-      await requestPayment(params, this.data.orderId)
-      if (USE_FAKE_PAY) markOrderFakePaid(this.data.orderId)
-      wx.redirectTo({ url: `/pages/pay-result/pay-result?status=success&orderId=${this.data.orderId}${USE_FAKE_PAY ? '&fake=1' : ''}` })
-    } catch (err) {
-      wx.hideLoading()
-      if (err && err.errMsg && err.errMsg.includes('cancel')) {
-        wx.showToast({ title: '已取消支付', icon: 'none' })
-      }
-    }
-  },
 
   // 取消订单
   async cancelOrder() {

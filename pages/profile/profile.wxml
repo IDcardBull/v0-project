@@ -30,7 +30,7 @@
     <view class="order-grid">
       <view class="order-cell" data-status="pending" bindtap="goOrders">
         <view class="order-num">{{stats.pending || 0}}</view>
-        <view class="order-label">待付款</view>
+        <view class="order-label">待确认</view>
       </view>
       <view class="order-cell" data-status="paid" bindtap="goOrders">
         <view class="order-num">{{stats.paid || 0}}</view>
