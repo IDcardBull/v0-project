@@ -4,14 +4,18 @@
 // =====================================================
 const http = require('./request.js')
 const {
+  CHANNEL,
   channelParams,
   filterProductListResponse,
 } = require('./channel.js')
 
 // ---------- 鉴权 ----------
+// 必须把 CHANNEL='wholesale' 传给后端，否则后端默认按零售（retail）凭证调
+// jscode2session：用零售 AppSecret(wxadef2fa60a78ccaa) 校验批发 AppID
+// (wx4614b3d303424458) 拿到的 code → 微信返 invalid code → 后端转抛 401。
 const auth = {
-  miniLogin: (code) => http.post('/client/auth/mini-login', { code }),
-  phoneLogin: (phone, code) => http.post('/client/auth/phone-login', { phone, code }),
+  miniLogin: (code) => http.post('/client/auth/mini-login', { code, channel: CHANNEL }),
+  phoneLogin: (phone, code) => http.post('/client/auth/phone-login', { phone, code, channel: CHANNEL }),
   bindPhone: (phone) => http.post('/client/auth/bind-phone', { phone }),
 }
 
