@@ -1,38 +1,14 @@
 // pages/orders/orders.js
 const api = require('../../utils/api.js')
-const {
-  formatPrice,
-  statusText,
-  statusColor,
-  normalizeOrderStatus,
-  isOrderStatus,
-} = require('../../utils/util.js')
-const { getDisplayOrderStatus } = require('../../utils/pay.js')
+const { formatPrice, statusText, statusColor } = require('../../utils/util.js')
 
 const TABS = [
   { id: '',          name: '全部' },
   { id: 'pending',   name: '待确认' },
-  { id: 'paid',      name: '待发货' },
-  { id: 'shipped',   name: '待收货' },
+  { id: 'shipping',  name: '待发货' },
   { id: 'completed', name: '已完成' },
+  { id: 'cancelled', name: '已取消' },
 ]
-
-const STATUS_QUERY_MAP = {
-  pending: 'pending_pay',
-  paid: 'pending_ship',
-  shipped: 'shipped',
-  completed: 'completed',
-}
-
-function getOrderList(res) {
-  if (Array.isArray(res)) return res
-  return (res && (res.list || res.items || res.records || res.data)) || []
-}
-
-function getOrderTotal(res, fallback) {
-  if (!res || Array.isArray(res)) return fallback
-  return Number(res.total || res.totalCount || res.count || fallback) || 0
-}
 
 const PAGE_SIZE = 10
 
@@ -76,11 +52,11 @@ Page({
     this.setData({ page: 1, hasMore: true, list: [], loading: true })
     try {
       const res = await this.fetchPage(1)
-      const rawList = getOrderList(res)
-      const total = getOrderTotal(res, rawList.length)
+      const list = (res && res.list) || []
+      const total = (res && res.total) || list.length
       this.setData({
-        list: this.format(rawList),
-        hasMore: rawList.length >= PAGE_SIZE && rawList.length < total,
+        list: this.format(list),
+        hasMore: list.length >= PAGE_SIZE && list.length < total,
         page: 1,
         initialLoading: false,
       })
@@ -97,9 +73,9 @@ Page({
     try {
       const next = this.data.page + 1
       const res = await this.fetchPage(next)
-      const rawList = getOrderList(res)
-      const total = getOrderTotal(res, this.data.list.length + rawList.length)
-      const merged = this.data.list.concat(this.format(rawList))
+      const list = (res && res.list) || []
+      const total = (res && res.total) || 0
+      const merged = this.data.list.concat(this.format(list))
       this.setData({
         list: merged,
         page: next,
@@ -112,52 +88,29 @@ Page({
 
   fetchPage(page) {
     const params = { page, pageSize: PAGE_SIZE }
-    if (this.data.activeTab) params.status = STATUS_QUERY_MAP[this.data.activeTab] || this.data.activeTab
+    if (this.data.activeTab) params.status = this.data.activeTab
     return api.order.list(params)
   },
 
   format(list) {
-    return list.map((o) => {
-      const displayStatus = getDisplayOrderStatus(o)
-      const normalizedStatus = normalizeOrderStatus(displayStatus)
-      const items = o.items || o.orderItems || o.goods || []
-      return {
-        ...o,
-        status: displayStatus,
-        id: o.id || o.orderId,
-        normalizedStatus,
-        isPendingConfirm: isOrderStatus(displayStatus, 'pending'),
-        isShipped: isOrderStatus(displayStatus, 'shipped'),
-        statusText: statusText(displayStatus),
-        statusColor: statusColor(displayStatus),
-        totalAmountText: formatPrice(o.totalAmount || o.payAmount || o.amount),
-        itemsPreview: items.slice(0, 3).map((it) => ({
-          ...it,
-          name: it.name || it.productName || it.goodsName || '',
-          image: it.image || it.productImage || it.skuImage || '',
-          spec: it.spec || it.skuSpec || '',
-          qty: it.qty || it.quantity || 0,
-          priceText: formatPrice(it.price || it.unitPrice || it.salePrice),
-        })),
-        moreCount: items.length > 3 ? items.length - 3 : 0,
-        totalQty: items.reduce((s, i) => s + (Number(i.qty || i.quantity) || 0), 0),
-      }
-    })
+    return list.map((o) => ({
+      ...o,
+      id: o.id || o._id,
+      statusText: statusText(o.status),
+      statusColor: statusColor(o.status),
+      totalAmountText: formatPrice(o.totalAmount),
+      itemsPreview: (o.items || []).slice(0, 3).map((it) => ({
+        ...it,
+        priceText: formatPrice(it.price),
+      })),
+      moreCount: (o.items || []).length > 3 ? (o.items || []).length - 3 : 0,
+      totalQty: (o.items || []).reduce((s, i) => s + (i.qty || 0), 0),
+    }))
   },
-
-  noop() {},
 
   goDetail(e) {
     const id = e.currentTarget.dataset.id
-    if (!id) return
     wx.navigateTo({ url: `/pages/order-detail/order-detail?id=${id}` })
-  },
-
-  // B2B 采购单无需线上支付，如需加急可直接联系客服。
-  contactService(e) {
-    e.stopPropagation && e.stopPropagation()
-    const app = getApp()
-    if (app && typeof app.callCustomerService === 'function') app.callCustomerService()
   },
 
   // 取消订单

@@ -29,7 +29,7 @@
       <text class="label">所在地区</text>
       <picker mode="region" value="{{region}}" bindchange="onRegionChange">
         <view class="picker-value {{!form.province ? 'placeholder' : ''}}">
-          {{form.province ? form.province + ' ' + form.city + ' ' + form.district : '请选择（需下拉选择）'}}
+          {{form.province ? form.province + ' ' + form.city + ' ' + form.district : '请选择'}}
         </view>
       </picker>
     </view>

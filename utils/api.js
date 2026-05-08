@@ -3,10 +3,6 @@
 // 业务 API 集中管理，所有页面通过此模块调用后端
 // =====================================================
 const http = require('./request.js')
-const {
-  channelParams,
-  filterProductListResponse,
-} = require('./channel.js')
 
 // ---------- 鉴权 ----------
 const auth = {
@@ -26,12 +22,9 @@ const product = {
   categoriesTree: () => http.get('/client/categories/tree'),
   categories: () => http.get('/client/categories'),
   brands: () => http.get('/client/brands'),
-  list: (params = {}) => http
-    .get('/client/product/list', channelParams(params), { silent: true })
-    .catch(() => http.get('/client/products', channelParams(params)))
-    .then(filterProductListResponse),
-  recommend: (limit = 8) => http.get('/client/products/recommend', channelParams({ limit })).then(filterProductListResponse),
-  detail: (id) => http.get(`/client/products/${id}`, channelParams()),
+  list: (params) => http.get('/client/products', params),
+  recommend: (limit = 8) => http.get('/client/products/recommend', { limit }),
+  detail: (id) => http.get(`/client/products/${id}`),
 }
 
 // ---------- 收货地址 ----------
@@ -44,42 +37,17 @@ const address = {
   remove: (id) => http.del(`/client/addresses/${id}`),
 }
 
-// ---------- 订单（采购单提交后即订单） ----------
+// ---------- 订单（走微信云开发，见 utils/cloud.js）----------
+// 订单相关全部通过云函数操作，本对象为兼容旧调用方提供的薄封装。
+const cloudApi = require('./cloud.js')
 const order = {
-  create: (data) => http.post('/client/orders', data),
-  list: (params) => http
-    .get('/client/orders', params, { silent: true })
-    .catch(() => http.get('/client/order/list', params)),
-  statusCounts: () => http
-    .get('/client/orders/status-counts', null, { silent: true })
-    .catch(() => http.get('/client/order/status-counts')),
-  // 别名：页面里通常用 stats
-  stats: () => order.statusCounts(),
-  detail: (id) => http
-    .get(`/client/orders/${id}`, null, { silent: true })
-    .catch(() => http.get('/client/order/detail', { id })),
-  cancel: (id) => http
-    .patch(`/client/orders/${id}/cancel`, null, { silent: true })
-    .catch(() => http.post('/client/order/cancel', { id })),
-  confirm: (id) => http
-    .patch(`/client/orders/${id}/confirm`, null, { silent: true })
-    .catch(() => http.post('/client/order/confirm', { id })),
-  // 更新订单收货地址（未发货可改）
-  updateAddress: (id, addressId) => http
-    .patch(`/client/orders/${id}/address`, { addressId }, { silent: true })
-    .catch(() => http.post('/client/order/update-address', { id, addressId })),
-  // 待付款订单重新调起支付
-  repay: (id) => http
-    .post(`/client/pay/orders/${id}`, null, { silent: true })
-    .catch(() => http.post('/client/order/pay', { id })),
-  logistics: (id) => http
-    .get(`/client/orders/${id}/logistics`, null, { silent: true })
-    .catch(() => http.get('/client/order/logistics', { orderId: id })),
-}
-
-// ---------- 微信支付 ----------
-const pay = {
-  requestPayParams: (orderId) => http.post(`/client/pay/orders/${orderId}`),
+  create: (data) => cloudApi.submitOrder(data),
+  list: (params) => cloudApi.listOrders(params),
+  detail: (id) => cloudApi.getOrder(id),
+  cancel: (id) => cloudApi.cancelOrder(id),
+  confirm: (id) => cloudApi.confirmReceive(id),
+  stats: () => cloudApi.getOrderStats(),
+  statusCounts: () => cloudApi.getOrderStats(),
 }
 
 // ---------- 站点配置（客服电话 / 热门搜索 / 协议 URL 等） ----------
@@ -89,4 +57,4 @@ const config = {
   get: () => http.get('/client/config', null, { silent: true }).catch(() => null),
 }
 
-module.exports = { auth, user, product, address, order, pay, config }
+module.exports = { auth, user, product, address, order, config }

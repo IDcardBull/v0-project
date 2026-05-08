@@ -1,13 +1,6 @@
 // pages/cart/cart.js
-const api = require('../../utils/api.js')
 const cartStore = require('../../utils/cart.js')
-const {
-  formatPrice,
-  getBasePrice,
-  getSkuPriceTiers,
-  pickTierPrice,
-} = require('../../utils/util.js')
-const { isProductVisible } = require('../../utils/channel.js')
+const { formatPrice } = require('../../utils/util.js')
 const app = getApp()
 
 Page({
@@ -21,7 +14,7 @@ Page({
   },
 
   onShow() {
-    this.refreshLatestPrices()
+    this.refresh()
   },
 
   refresh() {
@@ -41,39 +34,6 @@ Page({
       allSelected: list.length > 0 && selected.length === list.length,
     })
     app.refreshCartBadge()
-  },
-
-  async refreshLatestPrices() {
-    const list = cartStore.getList()
-    const next = []
-
-    for (const item of list) {
-      try {
-        const product = await api.product.detail(item.productId)
-        if (!isProductVisible(product)) continue
-        const skus = product.skus || []
-        const sku = skus.find((s) => Number(s.id) === Number(item.skuId)) || null
-        const tiers = getSkuPriceTiers(sku, product)
-        const basePrice = getBasePrice(sku || product)
-        const unitPrice = pickTierPrice(item.qty, tiers, basePrice)
-        next.push({
-          ...item,
-          productName: product.name || item.productName,
-          skuImage: (sku && (sku.image || sku.skuImage || sku.sku_image || sku.imageUrl || sku.image_url || sku.mainImage)) || product.mainImage || item.skuImage,
-          retailPrice: basePrice,
-          priceTiers: tiers,
-          unitPrice,
-          stock: sku && sku.stock != null ? sku.stock : item.stock,
-          retailEnabled: product.retailEnabled === true,
-          wholesaleEnabled: product.wholesaleEnabled === true,
-        })
-      } catch (e) {
-        next.push(item)
-      }
-    }
-
-    cartStore.save(next)
-    this.refresh()
   },
 
   toggleEdit() {
@@ -128,35 +88,14 @@ Page({
     })
   },
 
-  async validateSelectedItems(selected) {
-    const invalidSkuIds = []
-    for (const item of selected) {
-      try {
-        const product = await api.product.detail(item.productId)
-        if (!isProductVisible(product)) invalidSkuIds.push(item.skuId)
-      } catch (e) {
-        invalidSkuIds.push(item.skuId)
-      }
-    }
-
-    if (invalidSkuIds.length) {
-      cartStore.removeMany(invalidSkuIds)
-      this.refresh()
-      wx.showToast({ title: '已移除当前渠道不可购买商品', icon: 'none' })
-      return false
-    }
-    return true
-  },
-
-  async checkout() {
+  checkout() {
     if (!app.ensureLogin()) return
     const selected = cartStore.selectedItems()
     if (selected.length === 0) {
       wx.showToast({ title: '请先勾选商品', icon: 'none' })
       return
     }
-    const ok = await this.validateSelectedItems(selected)
-    if (!ok) return
+    app.globalData.buyNowPayload = null
     wx.navigateTo({ url: '/pages/checkout/checkout?from=cart' })
   },
 })

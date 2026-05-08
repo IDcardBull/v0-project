@@ -1,13 +1,12 @@
 // pages/profile/profile.js
 const api = require('../../utils/api.js')
 const { isLogin } = require('../../utils/request.js')
-const { normalizeOrderStatus } = require('../../utils/util.js')
 const app = getApp()
 
 Page({
   data: {
     user: null,
-    stats: { pending: 0, paid: 0, shipped: 0, completed: 0, afterSale: 0 },
+    stats: { pending: 0, shipping: 0, completed: 0, cancelled: 0 },
     version: '',
     customerServicePhone: '',
   },
@@ -29,7 +28,7 @@ Page({
     if (!isLogin()) {
       this.setData({
         user: null,
-        stats: { pending: 0, paid: 0, shipped: 0, completed: 0, afterSale: 0 },
+        stats: { pending: 0, shipping: 0, completed: 0, cancelled: 0 },
       })
       return
     }
@@ -53,37 +52,15 @@ Page({
     }
   },
 
-  normalizeStats(stats = {}) {
-    const result = { pending: 0, paid: 0, shipped: 0, completed: 0, afterSale: 0 }
-    Object.keys(stats || {}).forEach((key) => {
-      const group = normalizeOrderStatus(key)
-      const count = Number(stats[key]) || 0
-      if (group === 'pending') result.pending += count
-      else if (group === 'paid') result.paid += count
-      else if (group === 'shipped') result.shipped += count
-      else if (group === 'completed') result.completed += count
-      else if (group === 'after_sale') result.afterSale += count
-    })
-    return result
-  },
-
   async loadStats() {
     try {
       const stats = await api.order.stats()
-      this.setData({ stats: this.normalizeStats(stats) })
-    } catch (e) {
-      try {
-        const res = await api.order.list({ page: 1, pageSize: 100 })
-        const list = Array.isArray(res) ? res : (res && (res.list || res.items || res.records || res.data)) || []
-        const stats = {}
-        list.forEach((order) => {
-          const key = order && order.status
-          if (!key) return
-          stats[key] = (stats[key] || 0) + 1
-        })
-        this.setData({ stats: this.normalizeStats(stats) })
-      } catch (err) {}
-    }
+      const merged = {
+        pending: 0, shipping: 0, completed: 0, cancelled: 0,
+        ...(stats || {}),
+      }
+      this.setData({ stats: merged })
+    } catch (e) {}
   },
 
   goLogin() {
@@ -107,7 +84,7 @@ Page({
     app.globalData.userInfo = null
     this.setData({
       user: null,
-      stats: { pending: 0, paid: 0, shipped: 0, completed: 0, afterSale: 0 },
+      stats: { pending: 0, shipping: 0, completed: 0, cancelled: 0 },
     })
     wx.showToast({ title: '已退出登录', icon: 'success' })
   },
@@ -127,7 +104,7 @@ Page({
     app.callCustomerService()
   },
 
-  // 关于央皿陶瓷：弹出公司简介
+  // 关于央茗陶瓷：弹出公司简介
   showAbout() {
     const cfg = app.getSiteConfig()
     const content = cfg.about || `${app.globalData.companyName} · 景德镇源头工厂\n版本 ${this.data.version || '未知'}`
@@ -142,11 +119,11 @@ Page({
   // 用户协议 / 隐私政策
   showAgreement() {
     this._openDocument('agreementUrl', '用户协议',
-      `《央皿陶瓷批发用户协议》\n\n本协议由用户与央皿陶瓷共同确认...\n\n（完整内容请联系客服或访问官网获取）`)
+      `《央茗陶瓷批发用户协议》\n\n本协议由用户与央茗陶瓷共同确认...\n\n（完整内容请联系客服或访问官网获取）`)
   },
   showPrivacy() {
     this._openDocument('privacyUrl', '隐私政策',
-      `《央皿陶瓷隐私政策》\n\n我们高度重视用户隐私保护...\n\n（完整内容请联系客服或访问官网获取）`)
+      `《央茗陶瓷隐私政策》\n\n我们高度重视用户隐私保护...\n\n（完整内容请联系客服或访问官网获取）`)
   },
   _openDocument(urlKey, title, fallbackText) {
     const cfg = app.getSiteConfig()

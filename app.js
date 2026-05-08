@@ -10,13 +10,22 @@ const DEFAULT_SITE_CONFIG = {
   agreementUrl: '',             // 用户协议 URL
   privacyUrl: '',               // 隐私政策 URL
   freeShippingThreshold: 0,     // 满 X 元包邮，0 = 关闭
-  wecomBotKey: '',              // 企业微信机器人 key（用于B2B采购单通知）
-  wecomWebhookKey: '',          // 兼容字段：企业微信机器人 key
   about: '',                    // 关于我们文本
 }
 
 App({
   onLaunch() {
+    // 初始化微信云开发（订单走云函数）
+    // TODO: 部署时把 env 替换为你的云环境 ID
+    if (wx.cloud) {
+      wx.cloud.init({
+        env: 'CHANGE-ME-CLOUD-ENV-ID',
+        traceUser: true,
+      })
+    } else {
+      console.warn('[app] 当前基础库不支持 wx.cloud，请升级到 2.2.3+')
+    }
+
     // 启动时刷新 tabBar 采购单角标
     this.refreshCartBadge()
 
@@ -66,16 +75,6 @@ App({
   // 获取站点配置（任意页面调用）
   getSiteConfig() {
     return this.globalData.siteConfig || DEFAULT_SITE_CONFIG
-  },
-
-  // 企业微信机器人 key（优先后端站点配置，兼容本地调试配置）
-  getWecomBotKey() {
-    const cfg = this.getSiteConfig()
-    return cfg.wecomBotKey || cfg.wecomWebhookKey || wx.getStorageSync('wecom_bot_key') || ''
-  },
-
-  setWecomBotKey(key) {
-    if (key) wx.setStorageSync('wecom_bot_key', key)
   },
 
   // 统一的"联系客服"入口
@@ -141,9 +140,11 @@ App({
   globalData: {
     token: '',
     userInfo: null,
-    companyName: '央皿陶瓷',
+    companyName: '央茗陶瓷',
     version: '',
     envVersion: '',
     siteConfig: { ...DEFAULT_SITE_CONFIG },
+    // 「立即购买」临时载荷：详情页 -> checkout，避免冗长 URL 参数
+    buyNowPayload: null,
   },
 })

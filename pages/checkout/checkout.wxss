@@ -152,6 +152,16 @@
   font-weight: 700;
 }
 
+.checkout-tip {
+  margin: 0 24rpx 24rpx;
+  padding: 16rpx 20rpx;
+  background: #fff8e6;
+  border-radius: 12rpx;
+  font-size: 24rpx;
+  color: #a06a00;
+  line-height: 1.6;
+}
+
 .bar-placeholder { height: 130rpx; }
 
 .bottom-bar {
@@ -180,7 +190,7 @@
 .bb-submit {
   height: 84rpx;
   padding: 0 60rpx;
-  background: linear-gradient(135deg, #e63946, #c1121f);
+  background: var(--brand);
   color: #fff;
   font-size: 30rpx;
   font-weight: 600;

@@ -39,13 +39,12 @@
 
         <view class="o-card-foot">
           <view class="o-amount">
-            共 {{order.totalQty}} 件 · 预估合计
+            共 {{order.totalQty}} 件 · 合计
             <text class="o-amount-price">¥{{order.totalAmountText}}</text>
           </view>
           <view class="o-actions" catchtap="noop">
-            <view wx:if="{{order.isPendingConfirm}}" class="btn btn-outline o-btn" data-id="{{order.id}}" catchtap="cancelOrder">取消</view>
-            <view wx:if="{{order.isPendingConfirm}}" class="btn btn-danger o-btn" data-id="{{order.id}}" catchtap="contactService">联系客服</view>
-            <view wx:if="{{order.isShipped}}" class="btn btn-primary o-btn" data-id="{{order.id}}" catchtap="confirmReceive">确认收货</view>
+            <view wx:if="{{order.status === 'pending'}}" class="btn btn-outline o-btn" data-id="{{order.id}}" catchtap="cancelOrder">取消订单</view>
+            <view wx:if="{{order.status === 'shipping'}}" class="btn btn-primary o-btn" data-id="{{order.id}}" catchtap="confirmReceive">确认收货</view>
           </view>
         </view>
       </view>
@@ -53,7 +52,7 @@
 
     <view wx:if="{{!initialLoading && list.length === 0}}" class="empty">
       <view class="empty-title">暂无相关订单</view>
-      <view class="empty-sub">去批发大厅挑选商品吧</view>
+      <view class="empty-sub">去批发大厅下一单吧</view>
     </view>
 
     <view wx:if="{{!hasMore && list.length > 0}}" class="list-end">— 没有更多了 —</view>

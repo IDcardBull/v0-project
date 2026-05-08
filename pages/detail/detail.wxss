@@ -211,43 +211,10 @@
 }
 .bb-cart {
   background: linear-gradient(135deg, #f5a623, #ec8b00);
-  border-radius: 36rpx;
-}
-.bb-cart-full {
-  max-width: 360rpx;
+  border-radius: 36rpx 0 0 36rpx;
 }
 .bb-buy {
   background: linear-gradient(135deg, #e63946, #c1121f);
   border-radius: 0 36rpx 36rpx 0;
 }
 .bb-action:active { opacity: .85; }
-
-.d-sku-preview {
-  margin-top: 18rpx;
-  padding: 16rpx;
-  border: 2rpx dashed var(--brand);
-  border-radius: 12rpx;
-  background: var(--brand-soft);
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
-.d-sku-preview-img {
-  width: 112rpx;
-  height: 112rpx;
-  border-radius: 10rpx;
-  background: #fff;
-  flex-shrink: 0;
-}
-.d-sku-preview-info { flex: 1; min-width: 0; }
-.d-sku-preview-title {
-  font-size: 26rpx;
-  color: var(--brand);
-  font-weight: 700;
-  margin-bottom: 6rpx;
-}
-.d-sku-preview-text {
-  font-size: 22rpx;
-  color: var(--text-2);
-  line-height: 1.45;
-}

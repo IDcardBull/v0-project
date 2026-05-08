@@ -7,7 +7,7 @@
     </view>
     <view class="user-info">
       <block wx:if="{{user}}">
-        <view class="user-name">{{user.nickname || user.phone || '央皿用户'}}</view>
+        <view class="user-name">{{user.nickname || user.phone || '央茗用户'}}</view>
         <view class="user-role">
           <text class="tag" wx:if="{{user.level}}">{{user.level}}</text>
           <text wx:if="{{user.phone}}">{{user.phone}}</text>
@@ -32,21 +32,17 @@
         <view class="order-num">{{stats.pending || 0}}</view>
         <view class="order-label">待确认</view>
       </view>
-      <view class="order-cell" data-status="paid" bindtap="goOrders">
-        <view class="order-num">{{stats.paid || 0}}</view>
+      <view class="order-cell" data-status="shipping" bindtap="goOrders">
+        <view class="order-num">{{stats.shipping || 0}}</view>
         <view class="order-label">待发货</view>
-      </view>
-      <view class="order-cell" data-status="shipped" bindtap="goOrders">
-        <view class="order-num">{{stats.shipped || 0}}</view>
-        <view class="order-label">待收货</view>
       </view>
       <view class="order-cell" data-status="completed" bindtap="goOrders">
         <view class="order-num">{{stats.completed || 0}}</view>
         <view class="order-label">已完成</view>
       </view>
-      <view class="order-cell" data-status="after_sale" bindtap="goOrders">
-        <view class="order-num">{{stats.afterSale || 0}}</view>
-        <view class="order-label">售后</view>
+      <view class="order-cell" data-status="cancelled" bindtap="goOrders">
+        <view class="order-num">{{stats.cancelled || 0}}</view>
+        <view class="order-label">已取消</view>
       </view>
     </view>
   </view>
@@ -101,7 +97,7 @@
       <text class="list-arrow">›</text>
     </view>
     <view class="list-row" bindtap="showAbout">
-      <text>关于央皿陶瓷</text>
+      <text>关于央茗陶瓷</text>
       <text class="list-arrow">{{version ? 'v' + version : ''}} ›</text>
     </view>
   </view>

@@ -6,7 +6,7 @@
 // =====================================================
 
 // TODO: 上线前改为 HTTPS 生产域名
-const BASE_URL = 'http://127.0.0.1:3001/api'
+const BASE_URL = 'http://192.168.1.5:3001/api'
 
 const NO_AUTH_PATHS = [
   '/client/auth/mini-login',
@@ -15,7 +15,6 @@ const NO_AUTH_PATHS = [
   '/client/categories',
   '/client/categories/tree',
   '/client/brands',
-  '/client/product/list',
   '/client/products',
   '/client/config',
 ]

@@ -1,5 +1,5 @@
 {
-  "description": "央皿陶瓷 B2B 批发小程序",
+  "description": "央茗陶瓷 B2B 批发小程序",
   "packOptions": {
     "ignore": [],
     "include": []
@@ -30,26 +30,16 @@
       "disablePlugins": [],
       "outputPath": ""
     },
-    "ignoreUploadUnusedFiles": true,
-    "compileWorklet": false,
-    "packNpmManually": false,
-    "minifyWXSS": true,
-    "minifyWXML": true,
-    "localPlugins": false,
-    "disableUseStrict": false,
-    "useCompilerPlugins": false,
-    "condition": false,
-    "swc": false,
-    "disableSWC": true
+    "ignoreUploadUnusedFiles": true
   },
   "compileType": "miniprogram",
   "libVersion": "2.32.3",
-  "appid": "wx4614b3d303424458",
+  "appid": "touristappid",
   "projectname": "yangming-ceramics",
+  "cloudfunctionRoot": "cloudfunctions/",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",
     "tabSize": 2
-  },
-  "simulatorPluginLibVersion": {}
+  }
 }

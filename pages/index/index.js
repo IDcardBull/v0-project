@@ -1,6 +1,5 @@
 // pages/index/index.js
 const api = require('../../utils/api.js')
-const { filterVisibleProducts } = require('../../utils/channel.js')
 const app = getApp()
 
 const SORT_OPTIONS = [
@@ -61,7 +60,7 @@ Page({
 
   async loadRecommend() {
     try {
-      const list = filterVisibleProducts(await api.product.recommend(8))
+      const list = await api.product.recommend(8)
       this.setData({ recommends: list || [] })
     } catch (e) {}
   },

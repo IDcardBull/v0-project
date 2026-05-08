@@ -129,7 +129,7 @@ Page({
     }
     wx.showModal({
       title: '用户协议',
-      content: '《央皿陶瓷批发用户协议》\n\n本协议由用户与央皿陶瓷共同确认。完整协议请联系客服获取。',
+      content: '《央茗陶瓷批发用户协议》\n\n本协议由用户与央茗陶瓷共同确认。完整协议请联系客服获取。',
       showCancel: false,
       confirmText: '我已知晓',
     })
@@ -146,7 +146,7 @@ Page({
     }
     wx.showModal({
       title: '隐私政策',
-      content: '《央皿陶瓷隐私政策》\n\n我们高度重视用户隐私保护。完整内容请联系客服获取。',
+      content: '《央茗陶瓷隐私政策》\n\n我们高度重视用户隐私保护。完整内容请联系客服获取。',
       showCancel: false,
       confirmText: '我已知晓',
     })

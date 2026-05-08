@@ -11,13 +11,12 @@
     "pages/login/login",
     "pages/address/address",
     "pages/address-edit/address-edit",
-    "pages/checkout/checkout",
-    "pages/pay-result/pay-result"
+    "pages/checkout/checkout"
   ],
   "window": {
     "backgroundTextStyle": "dark",
     "navigationBarBackgroundColor": "#ffffff",
-    "navigationBarTitleText": "央皿陶瓷",
+    "navigationBarTitleText": "央茗陶瓷",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f5f5f7"
   },

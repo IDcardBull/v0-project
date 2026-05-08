@@ -1,11 +1,6 @@
 // components/product-card/product-card.js
 // 列表卡片：纯展示 + 跳详情。批发的 SKU 选择 / 阶梯价 / 加入采购单全部在详情页完成。
-const {
-  formatPrice,
-  getBasePrice,
-  normalizePriceTiers,
-  getMinWholesaleQty,
-} = require('../../utils/util.js')
+const { formatPrice } = require('../../utils/util.js')
 
 Component({
   properties: {
@@ -25,17 +20,16 @@ Component({
   observers: {
     product(p) {
       if (!p) return
-      const tiers = normalizePriceTiers(p)
-      const basePrice = getBasePrice(p)
-      const price = tiers.length ? tiers[0].price : basePrice
+      const price = formatPrice(p.retailPrice)
       const sales = p.salesCount > 0 ? `已售 ${p.salesCount}` : '暂无销量'
-      const minQty = getMinWholesaleQty(p, tiers)
-      const minQtyText = minQty > 1 ? `≥ ${minQty} 件起批` : '1 件起批'
+      const minQty = p.minWholesaleQty && p.minWholesaleQty > 1
+        ? `≥ ${p.minWholesaleQty} 件起批`
+        : '1 件起批'
       const tag = (p.tags && p.tags[0]) || ''
       this.setData({
-        priceText: formatPrice(price),
+        priceText: price,
         salesText: sales,
-        minQtyText,
+        minQtyText: minQty,
         coverUrl: p.mainImage || '',
         tagText: tag,
       })

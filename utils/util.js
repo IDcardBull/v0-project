@@ -11,87 +11,6 @@ function formatPrice(n) {
   return num.toFixed(2)
 }
 
-function firstValidNumber(...values) {
-  for (const v of values) {
-    if (v === null || v === undefined || v === '') continue
-    const n = Number(v)
-    if (!Number.isNaN(n)) return n
-  }
-  return 0
-}
-
-function getBasePrice(item) {
-  return firstValidNumber(
-    item && item.wholesalePrice,
-    item && item.wholesale_price,
-    item && item.salePrice,
-    item && item.sale_price,
-    item && item.price,
-    item && item.retailPrice,
-    item && item.retail_price,
-    item && item.memberPrice,
-    item && item.member_price
-  )
-}
-
-function normalizePriceTiers(source) {
-  const raw = source && (
-    source.priceTiers ||
-    source.price_tiers ||
-    source.tierPrices ||
-    source.tier_prices ||
-    source.wholesalePriceTiers ||
-    source.wholesale_price_tiers
-  )
-
-  if (!Array.isArray(raw)) return []
-
-  return raw
-    .map((tier) => {
-      const minQty = firstValidNumber(tier.minQty, tier.min_qty, tier.startQty, tier.start_qty, tier.qty)
-      const maxRaw = tier.maxQty !== undefined ? tier.maxQty :
-        tier.max_qty !== undefined ? tier.max_qty :
-          tier.endQty !== undefined ? tier.endQty : tier.end_qty
-      const maxQty = maxRaw === null || maxRaw === undefined || maxRaw === '' ? null : Number(maxRaw)
-      const price = firstValidNumber(
-        tier.price,
-        tier.unitPrice,
-        tier.unit_price,
-        tier.wholesalePrice,
-        tier.wholesale_price,
-        tier.tierPrice,
-        tier.tier_price
-      )
-
-      return {
-        ...tier,
-        minQty,
-        maxQty: Number.isNaN(maxQty) ? null : maxQty,
-        price,
-      }
-    })
-    .filter((tier) => tier.minQty > 0 && tier.price > 0)
-    .sort((a, b) => a.minQty - b.minQty)
-}
-
-function getSkuPriceTiers(sku, product) {
-  const skuTiers = normalizePriceTiers(sku)
-  if (skuTiers.length) return skuTiers
-  return normalizePriceTiers(product)
-}
-
-function getMinWholesaleQty(product, tiers = []) {
-  const configured = firstValidNumber(
-    product && product.minWholesaleQty,
-    product && product.min_wholesale_qty,
-    product && product.minOrderQty,
-    product && product.min_order_qty
-  )
-  if (configured > 0) return configured
-  if (tiers.length && tiers[0].minQty > 0) return tiers[0].minQty
-  return 1
-}
-
 // 时间格式化：ISO -> "YYYY-MM-DD HH:mm"
 function formatTime(iso, withSecond = false) {
   if (!iso) return ''
@@ -114,14 +33,13 @@ function debounce(fn, wait = 300) {
 
 // 阶梯价命中：根据数量从 priceTiers 中选当前单价
 function pickTierPrice(qty, priceTiers, fallbackPrice) {
-  const tiers = normalizePriceTiers({ priceTiers })
-  if (!tiers.length) return Number(fallbackPrice) || 0
-  const count = Number(qty) || 0
+  if (!priceTiers || !priceTiers.length) return Number(fallbackPrice) || 0
+  const sorted = [...priceTiers].sort((a, b) => a.minQty - b.minQty)
   let hit = null
-  for (const t of tiers) {
+  for (const t of sorted) {
     const min = Number(t.minQty) || 0
     const max = t.maxQty == null ? Infinity : Number(t.maxQty)
-    if (count >= min && count <= max) {
+    if (qty >= min && qty <= max) {
       hit = t
       break
     }
@@ -129,43 +47,12 @@ function pickTierPrice(qty, priceTiers, fallbackPrice) {
   return Number(hit ? hit.price : fallbackPrice) || 0
 }
 
-// 订单状态映射（兼容多种后端枚举命名）
+// 订单状态映射（询价 + 人工处理流程，仅 4 个状态）
 const ORDER_STATUS_MAP = {
-  pending: { text: '待客服确认', color: '#c84d3a' },
-  pending_pay: { text: '待客服确认', color: '#c84d3a' },
-  pendingPay: { text: '待客服确认', color: '#c84d3a' },
-  unpaid: { text: '待客服确认', color: '#c84d3a' },
-  paid: { text: '待发货', color: '#3c5a6f' },
-  pending_ship: { text: '待发货', color: '#3c5a6f' },
-  pendingShip: { text: '待发货', color: '#3c5a6f' },
-  shipped: { text: '待收货', color: '#3c5a6f' },
-  delivered: { text: '待收货', color: '#3c5a6f' },
-  completed: { text: '已完成', color: '#888888' },
-  after_sale: { text: '售后中', color: '#c84d3a' },
-  afterSale: { text: '售后中', color: '#c84d3a' },
-  refunding: { text: '退款中', color: '#c84d3a' },
-  cancelled: { text: '已取消', color: '#888888' },
-  canceled: { text: '已取消', color: '#888888' },
-  closed: { text: '已关闭', color: '#888888' },
-}
-
-const ORDER_STATUS_GROUPS = {
-  pending: ['pending', 'pending_pay', 'pendingPay', 'unpaid'], // B2B语义：已提交采购单，待客服确认
-  paid: ['paid', 'pending_ship', 'pendingShip'],
-  shipped: ['shipped', 'delivered'],
-  completed: ['completed'],
-  cancelled: ['cancelled', 'canceled', 'closed'],
-  after_sale: ['after_sale', 'afterSale', 'refunding'],
-}
-
-function normalizeOrderStatus(status) {
-  const raw = status == null ? '' : String(status)
-  const hit = Object.keys(ORDER_STATUS_GROUPS).find((key) => ORDER_STATUS_GROUPS[key].includes(raw))
-  return hit || raw
-}
-
-function isOrderStatus(status, group) {
-  return normalizeOrderStatus(status) === group
+  pending:   { text: '待确认', color: '#c84d3a' }, // 用户已下单，等待客服联系
+  shipping:  { text: '待发货', color: '#3c5a6f' }, // 客服已确认，等待出货
+  completed: { text: '已完成', color: '#888888' }, // 已收货 / 客服关闭
+  cancelled: { text: '已取消', color: '#888888' }, // 用户取消 / 客服取消
 }
 
 function orderStatusText(status) {
@@ -187,19 +74,12 @@ const formatDate = (d) => formatTime(d instanceof Date ? d.toISOString() : d)
 module.exports = {
   formatPrice,
   formatMoney,
-  firstValidNumber,
-  getBasePrice,
-  normalizePriceTiers,
-  getSkuPriceTiers,
-  getMinWholesaleQty,
   formatTime,
   formatDate,
   debounce,
   pickTierPrice,
   orderStatusText,
   orderStatusColor,
-  normalizeOrderStatus,
-  isOrderStatus,
   // 别名（页面里通常这样调用）
   statusText: orderStatusText,
   statusColor: orderStatusColor,

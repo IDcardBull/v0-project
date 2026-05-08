@@ -7,11 +7,7 @@
 //      qty, selected, stock }]
 // 策略：单价随数量自动重算（阶梯价）
 // =====================================================
-const {
-  pickTierPrice,
-  getBasePrice,
-  normalizePriceTiers,
-} = require('./util.js')
+const { pickTierPrice } = require('./util.js')
 
 const KEY = 'cart'
 
@@ -24,11 +20,8 @@ function save(list) {
 }
 
 function recalcUnitPrice(item) {
-  const tiers = normalizePriceTiers(item)
-  const basePrice = getBasePrice(item)
-  const tier = pickTierPrice(item.qty, tiers, basePrice)
-  item.priceTiers = tiers
-  item.retailPrice = basePrice
+  // 没有阶梯价时，单价 = retailPrice
+  const tier = pickTierPrice(item.qty, item.priceTiers, item.retailPrice)
   item.unitPrice = tier
   return item
 }
@@ -42,14 +35,7 @@ function add(payload) {
   const list = load()
   const idx = list.findIndex((i) => Number(i.skuId) === Number(payload.skuId))
   if (idx >= 0) {
-    // 同一 SKU 再次加入时，除数量累加外同步最新快照，避免后台更新 SKU 图片后采购单仍显示旧图。
-    const nextQty = Number(list[idx].qty || 0) + Number(payload.qty || 1)
-    list[idx] = {
-      ...list[idx],
-      ...payload,
-      selected: list[idx].selected !== false,
-      qty: nextQty,
-    }
+    list[idx].qty += payload.qty || 1
   } else {
     list.push({
       selected: true,
@@ -124,7 +110,6 @@ function summary(items = selectedItems()) {
 }
 
 module.exports = {
-  save,
   getList,
   add,
   updateQty,
