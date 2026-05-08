@@ -11,17 +11,8 @@
   margin: 60rpx 0 80rpx;
 }
 .brand-logo {
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 24rpx;
-  background: var(--brand);
-  color: #fff;
-  font-size: 40rpx;
-  font-weight: 700;
-  letter-spacing: 2rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 180rpx;
+  height: 180rpx;
   margin-bottom: 28rpx;
 }
 .brand-title {

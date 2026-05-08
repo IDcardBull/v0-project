@@ -4,80 +4,17 @@ const app = getApp()
 
 Page({
   data: {
-    phone: '',
-    code: '',
-    agree: false,
-    counting: false,
-    countdown: 60,
+    agree: true,
     loading: false,
   },
 
-  onUnload() {
-    if (this._timer) clearInterval(this._timer)
-  },
-
-  onPhoneInput(e) {
-    this.setData({ phone: e.detail.value.trim() })
-  },
-  onCodeInput(e) {
-    this.setData({ code: e.detail.value.trim() })
-  },
   toggleAgree() {
     this.setData({ agree: !this.data.agree })
   },
 
-  sendCode() {
-    const { phone, counting } = this.data
-    if (counting) return
-    if (!/^1\d{10}$/.test(phone)) {
-      wx.showToast({ title: '请输入正确手机号', icon: 'none' })
-      return
-    }
-    this.setData({ counting: true, countdown: 60 })
-    // TODO：对接 /client/auth/send-code 接口；后端尚未提供，先仅做倒计时
-    wx.showToast({ title: '验证码已发送', icon: 'none' })
-    this._timer = setInterval(() => {
-      const n = this.data.countdown - 1
-      if (n <= 0) {
-        clearInterval(this._timer)
-        this.setData({ counting: false, countdown: 60 })
-      } else {
-        this.setData({ countdown: n })
-      }
-    }, 1000)
-  },
-
-  // 手机号 + 验证码登录
-  async onPhoneLogin() {
-    const { phone, code, agree, loading } = this.data
-    if (loading) return
-    if (!agree) {
-      wx.showToast({ title: '请先同意协议', icon: 'none' })
-      return
-    }
-    if (!/^1\d{10}$/.test(phone)) {
-      wx.showToast({ title: '请输入正确手机号', icon: 'none' })
-      return
-    }
-    if (!code || code.length < 4) {
-      wx.showToast({ title: '请输入验证码', icon: 'none' })
-      return
-    }
-    this.setData({ loading: true })
-    try {
-      const res = await api.auth.phoneLogin(phone, code)
-      app.setLogin(res)
-      wx.showToast({ title: '登录成功', icon: 'success' })
-      setTimeout(() => this.afterLogin(), 600)
-    } catch (e) {
-      // request 已 toast
-    } finally {
-      this.setData({ loading: false })
-    }
-  },
-
-  // 微信一键登录
+  // 一键登录（微信）
   onWxLogin() {
+    if (this.data.loading) return
     if (!this.data.agree) {
       wx.showToast({ title: '请先同意协议', icon: 'none' })
       return
