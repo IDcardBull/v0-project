@@ -47,12 +47,14 @@ function pickTierPrice(qty, priceTiers, fallbackPrice) {
   return Number(hit ? hit.price : fallbackPrice) || 0
 }
 
-// 订单状态映射（询价 + 人工处理流程，仅 4 个状态）
+// 订单状态映射（与 NestJS 后端枚举一致）
 const ORDER_STATUS_MAP = {
-  pending:   { text: '待确认', color: '#c84d3a' }, // 用户已下单，等待客服联系
-  shipping:  { text: '待发货', color: '#3c5a6f' }, // 客服已确认，等待出货
-  completed: { text: '已完成', color: '#888888' }, // 已收货 / 客服关闭
-  cancelled: { text: '已取消', color: '#888888' }, // 用户取消 / 客服取消
+  pending_pay:  { text: '待确认',  color: '#c84d3a' }, // 后端默认初始状态（即使 offline 也是该状态，由客服确认价格后流转）
+  pending_ship: { text: '待发货',  color: '#3c5a6f' }, // 客服已确认/已支付，等待发货
+  shipped:      { text: '待收货',  color: '#3c5a6f' }, // 已发货
+  completed:    { text: '已完成',  color: '#888888' }, // 用户确认收货
+  after_sale:   { text: '售后中',  color: '#c84d3a' }, // 退款 / 售后中
+  closed:       { text: '已关闭',  color: '#888888' }, // 用户取消 / 系统关闭
 }
 
 function orderStatusText(status) {

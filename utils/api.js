@@ -37,17 +37,31 @@ const address = {
   remove: (id) => http.del(`/client/addresses/${id}`),
 }
 
-// ---------- 订单（走微信云开发，见 utils/cloud.js）----------
-// 订单相关全部通过云函数操作，本对象为兼容旧调用方提供的薄封装。
-const cloudApi = require('./cloud.js')
+// ---------- 订单（B2B 批发，走 NestJS /client/orders） ----------
+// 状态枚举: pending_pay | pending_ship | shipped | completed | after_sale | closed
+// 字段: id(BigInt) / orderNo / channel / status / totalAmount / freight / discountAmount /
+//       paidAmount / addressId / receiverSnapshot / payMethod / paidAt / shippedAt /
+//       completedAt / closedAt / logisticsCompany / trackingNo / remark / items[]
 const order = {
-  create: (data) => cloudApi.submitOrder(data),
-  list: (params) => cloudApi.listOrders(params),
-  detail: (id) => cloudApi.getOrder(id),
-  cancel: (id) => cloudApi.cancelOrder(id),
-  confirm: (id) => cloudApi.confirmReceive(id),
-  stats: () => cloudApi.getOrderStats(),
-  statusCounts: () => cloudApi.getOrderStats(),
+  // items: [{ skuId, qty }]
+  // 批发场景固定 channel='wholesale'、payMethod='offline'，下单即 pending_ship 状态由后端写入
+  create: (data) =>
+    http.post('/client/orders', {
+      channel: 'wholesale',
+      source: 'miniprogram_b',
+      payMethod: 'offline',
+      ...data,
+    }),
+  list: (params) => http.get('/client/orders', params),
+  detail: (id) => http.get(`/client/orders/${id}`),
+  statusCounts: () => http.get('/client/orders/status-counts'),
+  // 兼容旧调用方
+  stats: () => http.get('/client/orders/status-counts'),
+  cancel: (id, reason) => http.patch(`/client/orders/${id}/cancel`, { reason }),
+  confirm: (id) => http.patch(`/client/orders/${id}/confirm`),
+  updateAddress: (id, addressId) =>
+    http.patch(`/client/orders/${id}/address`, { addressId }),
+  logistics: (id) => http.get(`/client/orders/${id}/logistics`),
 }
 
 // ---------- 站点配置（客服电话 / 热门搜索 / 协议 URL 等） ----------

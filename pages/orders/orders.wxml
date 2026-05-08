@@ -43,8 +43,8 @@
             <text class="o-amount-price">¥{{order.totalAmountText}}</text>
           </view>
           <view class="o-actions" catchtap="noop">
-            <view wx:if="{{order.status === 'pending'}}" class="btn btn-outline o-btn" data-id="{{order.id}}" catchtap="cancelOrder">取消订单</view>
-            <view wx:if="{{order.status === 'shipping'}}" class="btn btn-primary o-btn" data-id="{{order.id}}" catchtap="confirmReceive">确认收货</view>
+            <view wx:if="{{order.status === 'pending_pay' || order.status === 'pending_ship'}}" class="btn btn-outline o-btn" data-id="{{order.id}}" catchtap="cancelOrder">取消订单</view>
+            <view wx:if="{{order.status === 'shipped'}}" class="btn btn-primary o-btn" data-id="{{order.id}}" catchtap="confirmReceive">确认收货</view>
           </view>
         </view>
       </view>

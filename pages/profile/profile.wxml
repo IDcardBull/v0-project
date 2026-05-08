@@ -9,7 +9,8 @@
       <block wx:if="{{user}}">
         <view class="user-name">{{user.nickname || user.phone || '央茗用户'}}</view>
         <view class="user-role">
-          <text class="tag" wx:if="{{user.level}}">{{user.level}}</text>
+          <text class="tag" wx:if="{{user.level && user.level.name}}">{{user.level.name}}</text>
+          <text class="tag" wx:elif="{{user.role === 'dealer'}}">分销商</text>
           <text wx:if="{{user.phone}}">{{user.phone}}</text>
         </view>
       </block>
@@ -28,21 +29,21 @@
       <view class="panel-more" bindtap="goOrders">全部订单 ›</view>
     </view>
     <view class="order-grid">
-      <view class="order-cell" data-status="pending" bindtap="goOrders">
-        <view class="order-num">{{stats.pending || 0}}</view>
+      <view class="order-cell" data-status="pending_pay" bindtap="goOrders">
+        <view class="order-num">{{stats.pending_pay || 0}}</view>
         <view class="order-label">待确认</view>
       </view>
-      <view class="order-cell" data-status="shipping" bindtap="goOrders">
-        <view class="order-num">{{stats.shipping || 0}}</view>
+      <view class="order-cell" data-status="pending_ship" bindtap="goOrders">
+        <view class="order-num">{{stats.pending_ship || 0}}</view>
         <view class="order-label">待发货</view>
+      </view>
+      <view class="order-cell" data-status="shipped" bindtap="goOrders">
+        <view class="order-num">{{stats.shipped || 0}}</view>
+        <view class="order-label">待收货</view>
       </view>
       <view class="order-cell" data-status="completed" bindtap="goOrders">
         <view class="order-num">{{stats.completed || 0}}</view>
         <view class="order-label">已完成</view>
-      </view>
-      <view class="order-cell" data-status="cancelled" bindtap="goOrders">
-        <view class="order-num">{{stats.cancelled || 0}}</view>
-        <view class="order-label">已取消</view>
       </view>
     </view>
   </view>

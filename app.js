@@ -15,17 +15,6 @@ const DEFAULT_SITE_CONFIG = {
 
 App({
   onLaunch() {
-    // 初始化微信云开发（订单走云函数）
-    // TODO: 部署时把 env 替换为你的云环境 ID
-    if (wx.cloud) {
-      wx.cloud.init({
-        env: 'CHANGE-ME-CLOUD-ENV-ID',
-        traceUser: true,
-      })
-    } else {
-      console.warn('[app] 当前基础库不支持 wx.cloud，请升级到 2.2.3+')
-    }
-
     // 启动时刷新 tabBar 采购单角标
     this.refreshCartBadge()
 

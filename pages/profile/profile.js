@@ -6,7 +6,7 @@ const app = getApp()
 Page({
   data: {
     user: null,
-    stats: { pending: 0, shipping: 0, completed: 0, cancelled: 0 },
+    stats: { pending_pay: 0, pending_ship: 0, shipped: 0, completed: 0 },
     version: '',
     customerServicePhone: '',
   },
@@ -28,7 +28,7 @@ Page({
     if (!isLogin()) {
       this.setData({
         user: null,
-        stats: { pending: 0, shipping: 0, completed: 0, cancelled: 0 },
+        stats: { pending_pay: 0, pending_ship: 0, shipped: 0, completed: 0 },
       })
       return
     }
@@ -54,9 +54,11 @@ Page({
 
   async loadStats() {
     try {
-      const stats = await api.order.stats()
+      const stats = await api.order.statusCounts()
+      // 后端返回：{ all, pending_pay, pending_ship, shipped, completed, after_sale, closed }
       const merged = {
-        pending: 0, shipping: 0, completed: 0, cancelled: 0,
+        pending_pay: 0, pending_ship: 0, shipped: 0, completed: 0,
+        after_sale: 0, closed: 0,
         ...(stats || {}),
       }
       this.setData({ stats: merged })
@@ -84,7 +86,7 @@ Page({
     app.globalData.userInfo = null
     this.setData({
       user: null,
-      stats: { pending: 0, shipping: 0, completed: 0, cancelled: 0 },
+      stats: { pending_pay: 0, pending_ship: 0, shipped: 0, completed: 0 },
     })
     wx.showToast({ title: '已退出登录', icon: 'success' })
   },

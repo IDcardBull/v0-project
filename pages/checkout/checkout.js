@@ -1,5 +1,6 @@
 // pages/checkout/checkout.js
-// 提交订单（询价单）：写入云数据库 + 通知企业微信群
+// 提交订单：调用后端 NestJS POST /client/orders
+// 后端会根据 skuId+qty 重新计算金额、写入订单、并由后端 hook 触发企业微信群通知
 const api = require('../../utils/api.js')
 const cartStore = require('../../utils/cart.js')
 const { formatPrice, toIdStr } = require('../../utils/util.js')
@@ -109,31 +110,20 @@ Page({
     wx.showLoading({ title: '提交中…', mask: true })
 
     try {
+      // 后端 CreateOrderDto 只接受 skuId + qty + addressId + remark
+      // 商品名/规格/图片/价格由后端按 skuId 重新查表写入 orderItems（避免前端篡改）
       const payload = {
-        items: items.map((i) => ({
-          productId: i.productId || null,
-          skuId: i.skuId || null,
-          name: i.productName,
-          spec: i.skuSpec || '',
-          image: i.skuImage || '',
-          price: Number(i.unitPrice),
-          qty: Number(i.qty),
-        })),
-        address: {
-          contact: address.receiver || address.contact,
-          phone: address.phone,
-          province: address.province,
-          city: address.city,
-          district: address.district || '',
-          detail: address.detail,
-        },
-        remark,
-        user: {
-          nickname:
-            (app.globalData.userInfo && app.globalData.userInfo.nickname) || '',
-          phone:
-            (app.globalData.userInfo && app.globalData.userInfo.phone) || '',
-        },
+        items: items
+          .filter((i) => i.skuId)
+          .map((i) => ({ skuId: Number(i.skuId), qty: Number(i.qty) })),
+        addressId: Number(address.id),
+        remark: remark || undefined,
+      }
+      if (!payload.items.length) {
+        wx.hideLoading()
+        wx.showToast({ title: '商品信息缺失', icon: 'none' })
+        this.setData({ submitting: false })
+        return
       }
 
       const order = await api.order.create(payload)

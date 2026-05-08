@@ -1,90 +1,133 @@
-# 央茗陶瓷 · B2B 询价小程序（原生微信小程序）
+# 央茗陶瓷 · B2B 批发小程序（前端）
 
-> 原生微信小程序代码（WXML / WXSS / JS / JSON）。
-> **业务定位**：陶瓷电子图册 + 客户下询价单 → 通过云函数推送企业微信群机器人 → 人工跟进处理。
-> **数据架构**：商品 / 分类 / 地址 / 用户 仍走 NestJS（`/client/*`）；**订单全部走微信小程序云开发（cloudfunctions/）**。
-> 已**移除微信支付**，订单提交后由客服人工对接价格、库存、物流。
+景德镇陶瓷批发场景的微信小程序前端，与管理端 [`v0-vue-element-plus`](https://github.com/IDcardBull/v0-vue-element-plus) 共用同一个 NestJS 后端。
+
+> **数据架构**：所有业务数据（商品 / 分类 / 品牌 / 地址 / 用户 / 订单）全部通过后端 `/client/*` REST 接口对接 NestJS + MySQL，**前端不存任何业务数据**。
+> 企业微信群机器人通知由后端 hook 触发，前端不参与。
 
 ---
 
-## 一、运行前必做（重要）
+## 1) 后端联调地址
 
-### 1) 修改 NestJS API 域名
+后端 NestJS 默认监听 `0.0.0.0:3000`。本地联调有两种方式：
 
-打开 `utils/request.js`：
-
-```js
-const BASE_URL = 'http://192.168.1.5:3001/api'  // ← 改成你的后端地址
-```
-
-商品/分类/品牌/地址/用户走这个后端。
-
-### 2) 配置微信云开发环境
-
-打开 `app.js`，把 `wx.cloud.init` 的 env 替换为你自己的云环境 ID：
-
-```js
-wx.cloud.init({
-  env: 'your-cloud-env-id',  // ← 在云开发控制台获取
-  traceUser: true,
-})
-```
-
-### 3) 部署 6 个云函数
-
-在微信开发者工具中右键 `cloudfunctions/` 下的每个目录 → **「上传并部署：云端安装依赖」**：
-
-| 云函数 | 功能 |
+| 场景 | API_BASE_URL |
 | --- | --- |
-| `submitOrder` | 创建订单 + 触发企业微信群机器人通知 |
-| `listOrders` | 当前用户订单列表（按 status 过滤、分页） |
-| `getOrder` | 当前用户订单详情 |
-| `cancelOrder` | 取消订单（仅 `pending` 状态） |
-| `confirmReceive` | 确认收货（仅 `shipping` 状态） |
-| `getOrderStats` | 各状态订单数量（我的页用） |
+| 本地 + 真机 | 局域网 IP，如 `http://192.168.1.10:3000` |
+| 本地 + 模拟器 | `http://127.0.0.1:3000` |
+| 已上线 | `https://api.yourdomain.com` |
 
-### 4) 配置企业微信群机器人 Webhook
+修改 `utils/request.js` 顶部的 `API_BASE_URL` 即可。微信小程序需要在「开发」→「服务器域名」白名单加入域名；本地调试请勾选开发者工具 →「详情」→「不校验合法域名」。
 
-在云开发控制台 → 云函数 `submitOrder` → **「配置 → 环境变量」** 中新增：
+---
 
-```
-WECOM_BOT_KEY = xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-```
+## 2) 接口字段对接清单
 
-> Webhook 完整地址形如 `https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=KEY`，仅填写最后的 `key=` 部分。
-> **未配置时**：订单依然能正常入库，只是不会发群消息。
+### 鉴权（`/client/auth/*`，公开）
+- `POST /client/auth/mini-login` `{ code }` → 返回 `{ token, user }`
+- `POST /client/auth/wechat-login` 同上（别名）
+- `POST /client/auth/phone-login` `{ phone, code }`
+- `POST /client/auth/bind-phone` `{ phone }`（需登录）
 
-### 5) 在云数据库创建集合
+返回的 `token` 写入 `Authorization: Bearer xxx`，由 `utils/request.js` 自动注入。
 
-云开发控制台 → 数据库 → 新建集合 `orders`，权限设置为 **「仅创建者及管理员可读写」**（云函数会用 OPENID 自动隔离用户数据）。
+### 用户（`/client/user/*`）
+- `GET /client/user/profile` → `{ id, nickname, avatar, phone, gender, role, level: { id, name }, points, balance, totalSpent, registeredAt }`
+- `PATCH /client/user/profile` `{ nickname?, avatar?, gender? }`
 
-### 6) 配置 AppID + 导入项目
+### 商品 / 分类（`/client/*`，公开）
+- `GET /client/categories/tree` → 树形 `[{ id, name, icon, parentId, children, productCount }]`
+- `GET /client/brands` → `[{ id, name, logo }]`
+- `GET /client/products` 参数 `{ categoryId?, brandId?, keyword?, channel?, sort?, page?, pageSize? }`
+- `GET /client/products/recommend?limit=8`
+- `GET /client/products/:id` → 含 `skus`（含 `priceTiers`）、`category`、`brand`
 
-`project.config.json` 中 `appid` 改为你的小程序 AppID（云开发要求正式 AppID，不能用测试号）。
-微信开发者工具 → 「+ 导入项目」→ 选择本目录。
+商品关键字段：`mainImage / images[] / retailPrice / memberPrice / minWholesaleQty / wholesaleEnabled / salesCount`
 
-### 7)（可选）站点配置接口
+SKU 关键字段：`id / specs(JSON) / image / retailPrice / memberPrice / stock / priceTiers[]`
 
-启动时调用 `GET /client/config` 拉取运行时配置：
+### 收货地址（`/client/addresses/*`）
+- `GET /client/addresses` → `[{ id, receiver, phone, province, city, district, detail, isDefault, tag }]`
+- `POST /client/addresses`、`PUT /client/addresses/:id`、`DELETE /client/addresses/:id`
+- `PATCH /client/addresses/:id/default`
+
+### 订单（`/client/orders/*`）
+
+#### 状态机（与后端枚举完全一致）
+
+| 后端 status | 前端文案 | 何时进入 |
+| --- | --- | --- |
+| `pending_pay` | 待确认 | 下单初始状态（即使是 `payMethod='offline'` 也会进入此状态，由客服联系后流转） |
+| `pending_ship` | 待发货 | 客服在管理端确认 / 已支付 |
+| `shipped` | 待收货 | 客服在管理端发货并填写物流单号 |
+| `completed` | 已完成 | 用户在小程序「确认收货」 |
+| `after_sale` | 售后中 | 后端 `OrderService.refund()` |
+| `closed` | 已关闭 | 用户取消 / 系统超时关闭 |
+
+#### 接口
+
+- `POST /client/orders` `{ items: [{skuId, qty}], addressId, remark?, channel='wholesale', source='miniprogram_b', payMethod='offline' }`
+  - 前端 `utils/api.js` 中 `order.create()` 已固定 `channel/source/payMethod` 默认值，业务代码只传 `items + addressId + remark`
+  - 后端会按 `skuId+qty` 重新查表计算金额、写入 `order_items` 快照、占用库存、最后返回完整订单
+- `GET /client/orders?status=pending_pay&page=1&pageSize=10`
+- `GET /client/orders/status-counts` → `{ all, pending_pay, pending_ship, shipped, completed, after_sale, closed }`
+- `GET /client/orders/:id`
+- `PATCH /client/orders/:id/cancel` `{ reason? }`（用户取消，仅 pending_pay/pending_ship 可用）
+- `PATCH /client/orders/:id/confirm`（用户确认收货，仅 shipped 可用）
+- `PATCH /client/orders/:id/address` `{ addressId }`
+- `GET /client/orders/:id/logistics`
+
+#### 订单字段对接
+
+| 后端字段 | 前端用法 | 备注 |
+| --- | --- | --- |
+| `id` | `BigInt`，前端转 `String(id)` 用 | 路由参数也按字符串传 |
+| `orderNo` | 订单号展示用 | 客服查询时使用 |
+| `totalAmount` | 订单合计 | 已含运费、减优惠 |
+| `freight` | 运费 | 0 时前端展示「客服核算」 |
+| `discountAmount` | 优惠 | 大于 0 时显示 |
+| `paidAmount` | 已支付 | 详情可展示 |
+| `payMethod` | `wechat / offline / credit` | 详情页文案转换 |
+| `paidAt / shippedAt / completedAt / closedAt` | 时间线 | 详情页按存在性显示 |
+| `logisticsCompany / trackingNo` | 物流 | 已发货时展示 |
+| `address` 关联表 | 当前关联地址 | 用户改了地址会跟着变 |
+| `receiverSnapshot` | 下单时地址快照 | 即使原地址被删除/修改也保留 |
+| `items[].productName / skuSpec / skuImage / unitPrice / qty / subtotal` | 订单内商品 | 注意 `skuSpec` 是 JSON 字符串，详情页通过 `formatSpec()` 解析 |
+
+---
+
+## 3) 企业微信群机器人通知（由后端实现）
+
+> **前端不参与，无需任何配置。**
+
+后端在 `OrderService.createOrder()` 完成后增加一个 hook：用 `axios.post(WECOM_BOT_URL, { msgtype: 'markdown', markdown: { content: '...订单详情...' } })`。
+机器人 Webhook 地址通过环境变量 `WECOM_BOT_KEY` 注入，未配置时 hook 静默 `try/catch` 跳过。
+
+由后端同事在 NestJS 项目里加 `OrderNotifyService`，前端无需任何改动即可享受到群消息通知。
+
+---
+
+## 4) 站点配置接口（可选）
+
+启动时调用 `GET /client/config`（公开），返回结构：
 
 ```json
 {
-  "code": 0,
-  "data": {
-    "customerServicePhone": "400-188-8888",
-    "hotKeywords": ["功夫茶具", "青花瓷", "酒店白瓷"],
-    "agreementUrl": "https://yourdomain.com/agreement",
-    "privacyUrl": "https://yourdomain.com/privacy",
-    "about": "央茗陶瓷 · 景德镇源头工厂"
-  }
+  "customerServicePhone": "400-188-8888",
+  "hotKeywords": ["功夫茶具", "青花瓷", "酒店白瓷"],
+  "agreementUrl": "https://yourdomain.com/agreement",
+  "privacyUrl": "https://yourdomain.com/privacy",
+  "freeShippingThreshold": 1000,
+  "flatShippingFee": 20,
+  "about": "央茗陶瓷 · 景德镇源头工厂"
 }
 ```
 
-后端未实现该接口时所有页面走默认值，不影响功能。
+接口未实现时所有相关 UI 走默认值降级，不会报错。
 
 ---
 
-## 二、页面清单
+## 5) 页面清单
 
 | 页面 | 路径 | 说明 |
 | --- | --- | --- |
@@ -94,7 +137,7 @@ WECOM_BOT_KEY = xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 | 我的 | `pages/profile/profile` | 用户信息 + 订单状态宫格（4 格）（tab） |
 | 商品详情 | `pages/detail/detail` | 轮播、规格、阶梯价、加入采购单 / 立即购买 |
 | 搜索 | `pages/search/search` | 热搜词、搜索历史 |
-| 订单列表 | `pages/orders/orders` | 全部 / 待确认 / 待发货 / 已完成 / 已取消 |
+| 订单列表 | `pages/orders/orders` | 全部 / 待确认 / 待发货 / 待收货 / 已完成 |
 | 订单详情 | `pages/order-detail/order-detail` | 订单明细、状态、取消 / 确认收货 |
 | 结算 | `pages/checkout/checkout` | 选地址、备注、提交订单（无支付） |
 | 收货地址 | `pages/address/address` | 列表、默认、Picker |
@@ -103,126 +146,55 @@ WECOM_BOT_KEY = xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 ---
 
-## 三、订单业务流
-
-```
-登录 ──► 浏览图册 ──► 详情（选规格 / 数量 / 阶梯价）
-                          │
-                ┌─────────┴────────┐
-         加入采购单            立即购买
-                │                  │
-                └────► checkout ◄──┘
-                       │
-              提交订单（云函数 submitOrder）
-                       │
-              ┌────────┴────────┐
-       写入云数据库 orders   调用企业微信机器人
-                       │
-              客服在群里收到订单 → 人工处理 → 在云控制台改 status
-                       │
-            shipping ──► completed（用户「确认收货」）
-            或           cancelled（用户取消 / 客服取消）
-```
-
-- **采购单（购物车）** 本地存储（`utils/cart.js`），不走后端。
-- **阶梯价** 选规格 / 调整数量时通过 `pickTierPrice()` 实时重算。
-- **立即购买** 通过 `app.globalData.buyNowPayload` 临时载荷传递。
-- **运费** 由客服核算后手动改云数据库中的 `shippingFee` 字段。
-
----
-
-## 四、订单状态（仅 4 个）
-
-| 状态 | 文案 | 切换方式 |
-| --- | --- | --- |
-| `pending`   | 待确认 | 用户提交订单后默认状态 |
-| `shipping`  | 待发货 | 客服在云数据库手动改 |
-| `completed` | 已完成 | 用户在 App 内点「确认收货」，或客服改 |
-| `cancelled` | 已取消 | 用户在「待确认」时取消，或客服改 |
-
-> 客服流程很简单：群里收到订单消息 → 联系客户确认 → 在云开发控制台 orders 集合中把 status 由 `pending` 改成 `shipping` 即可（同时可填 `trackingCompany` / `trackingNo` 字段，会展示在订单详情页）。
-
----
-
-## 五、orders 集合数据结构
-
-```js
-{
-  _id: '云数据库自动生成',
-  _openid: 'OPENID（云函数自动注入）',
-  orderNo: 'YM20260508xxxxxx',
-  status: 'pending' | 'shipping' | 'completed' | 'cancelled',
-  items: [
-    { productId, skuId, name, spec, image, price, qty, lineTotal }
-  ],
-  totalQty: 12,
-  goodsAmount: 1280.00,
-  shippingFee: 0,        // 客服后台核算
-  totalAmount: 1280.00,
-  address: { contact, phone, province, city, district, detail },
-  user: { nickname, phone },
-  remark: '客户备注',
-  notifySent: true,      // 是否已成功发企业微信
-  notifiedAt: ISODate,
-  createdAt: ISODate,
-  updatedAt: ISODate,
-  shippedAt: ISODate,    // 客服改为 shipping 时人工填
-  completedAt: ISODate,  // 用户确认收货时自动填
-  cancelledAt: ISODate,
-  trackingCompany: '顺丰',  // 可选
-  trackingNo: 'SF1234567890', // 可选
-}
-```
-
----
-
-## 六、目录结构
+## 6) 项目结构
 
 ```
 .
-├── app.js                        全局逻辑（登录态、tab 角标、云开发初始化、站点配置）
-├── app.json                      页面注册 + tabBar
-├── app.wxss                      全局样式 + 品牌色 token
-├── sitemap.json
-├── project.config.json           已配置 cloudfunctionRoot: "cloudfunctions/"
-├── components/
-│   ├── product-card/             列表商品卡片
-│   └── quantity-stepper/         数量步进器
-├── pages/                        12 个业务页面（无支付页）
-├── cloudfunctions/               6 个云函数
-│   ├── submitOrder/
-│   ├── listOrders/
-│   ├── getOrder/
-│   ├── cancelOrder/
-│   ├── confirmReceive/
-│   └── getOrderStats/
-└── utils/
-    ├── request.js                HTTP 封装（NestJS 用）
-    ├── api.js                    业务 API 聚合（订单走 cloud.js）
-    ├── cloud.js                  云函数调用封装
-    ├── cart.js                   本地购物车
-    └── util.js                   formatPrice / formatTime / pickTierPrice / 状态映射
+├── app.js                         全局初始化（鉴权 / tabBar 角标 / 站点配置）
+├── app.json                       页面路由 + tabBar
+├── project.config.json            微信开发者工具配置
+├── utils/
+│   ├── request.js                 HTTP 封装（401 自动跳登录、统一错误 toast）
+│   ├── api.js                     业务接口集合
+│   ├── cart.js                    采购单（购物车）本地存储 + 阶梯价计算
+│   └── util.js                    格式化、订单状态映射等
+├── pages/                         12 个业务页面（无支付页）
+└── images/                        本地资源（tabBar 图标等）
 ```
 
 ---
 
-## 七、常见问题
+## 7) 启动小程序
 
-**1. 提交订单时报"wx.cloud 不可用"？**
-- 检查 `app.js` 的 `wx.cloud.init` env 是否填写。
-- 基础库要求 2.2.3+。
-- 必须使用正式 AppID，**云开发不支持测试号**。
+1. 安装 [微信开发者工具](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html) 稳定版
+2. 「+ 导入项目」→ 选择项目根目录（含 `app.json`）
+3. 修改 `utils/request.js` 中的 `API_BASE_URL`
+4. 详情中如果是测试号 / tourist appid，将「不校验合法域名」勾选
 
-**2. 群里没收到通知？**
-- 云函数 `submitOrder` 的环境变量 `WECOM_BOT_KEY` 是否配置。
-- 在云控制台 orders 集合查 `notifySent` 字段：`false` 说明发送失败，看云函数日志。
+---
 
-**3. 用户看不到自己的订单？**
-- 云开发自动按 OPENID 隔离，确保用户已登录小程序（用户没登录 NestJS 也没关系，OPENID 由 wx.cloud 自动获取）。
+## 8) 常见问题
 
-**4. 客服如何修改订单状态？**
-- 云开发控制台 → 数据库 → orders 集合 → 找到订单 → 点编辑 → 修改 status / shippingFee / trackingCompany / trackingNo 字段保存。
-- 或者后续可加管理后台。
+**1. 提交订单 400 「商品不能为空」？**
+检查 checkout 页传给后端的 `items` 是否包含 `skuId`，前端会 `Number(skuId)` 转换；`skuId` 必须是数字。
 
-**5. 阶梯价如何生效？**
-- `GET /client/products/:id` 在 SKU 内返回 `priceTiers: [{ minQty, maxQty, price }]`，前端会自动按当前数量命中。
+**2. 401 反复跳登录？**
+- JWT 过期：`utils/request.js` 在 401 时会自动 `app.logout() + 跳登录`
+- 请检查后端 `JwtStrategy` 的 `secret` 与前端登录返回的 token 是否一致
+
+**3. 商品列表为空？**
+- 后端 `Product.status = 1`（上架）才会返回
+- `wholesaleEnabled` 与 `retailEnabled`：默认 `channel='retail'`，B2B 端传 `channel='wholesale'`
+- 前端 `api.product.list(params)` 默认零售，订单提交时已强制 `channel='wholesale'`
+
+**4. 订单 `id` 是 BigInt，wxml 里显示 `[object Object]`？**
+- 前端 format 时已统一 `String(o.id)` 转字符串
+- 路由参数也按字符串传：`?id=${order.id}`
+
+**5. 物流没显示？**
+- 后端发货后会写入 `logisticsCompany / trackingNo / shippedAt`
+- 详情页根据 `shippedAtText` 是否存在条件渲染
+
+**6. 订单 hook 没发企业微信群？**
+- 这是后端的事；让后端同事去 `OrderService.createOrder()` 完成后加个 `axios.post(WECOM_BOT_URL, ...)` hook
+- 检查后端环境变量 `WECOM_BOT_KEY` 是否配置

@@ -36,7 +36,6 @@
   "libVersion": "2.32.3",
   "appid": "touristappid",
   "projectname": "yangming-ceramics",
-  "cloudfunctionRoot": "cloudfunctions/",
   "condition": {},
   "editorSetting": {
     "tabIndent": "insertSpaces",

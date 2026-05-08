@@ -3,11 +3,11 @@ const api = require('../../utils/api.js')
 const { formatPrice, statusText, statusColor } = require('../../utils/util.js')
 
 const TABS = [
-  { id: '',          name: '全部' },
-  { id: 'pending',   name: '待确认' },
-  { id: 'shipping',  name: '待发货' },
-  { id: 'completed', name: '已完成' },
-  { id: 'cancelled', name: '已取消' },
+  { id: '',             name: '全部' },
+  { id: 'pending_pay',  name: '待确认' },
+  { id: 'pending_ship', name: '待发货' },
+  { id: 'shipped',      name: '待收货' },
+  { id: 'completed',    name: '已完成' },
 ]
 
 const PAGE_SIZE = 10
@@ -95,13 +95,19 @@ Page({
   format(list) {
     return list.map((o) => ({
       ...o,
-      id: o.id || o._id,
+      // 后端 BigInt 序列化后是字符串/数字，统一转字符串供 wxml 使用
+      id: String(o.id != null ? o.id : ''),
       statusText: statusText(o.status),
       statusColor: statusColor(o.status),
       totalAmountText: formatPrice(o.totalAmount),
       itemsPreview: (o.items || []).slice(0, 3).map((it) => ({
         ...it,
-        priceText: formatPrice(it.price),
+        // 后端字段：productName / skuSpec / skuImage / unitPrice
+        // 兼容旧字段：name / spec / image / price
+        name: it.productName || it.name,
+        spec: it.skuSpec || it.spec,
+        image: it.skuImage || it.image,
+        priceText: formatPrice(it.unitPrice != null ? it.unitPrice : it.price),
       })),
       moreCount: (o.items || []).length > 3 ? (o.items || []).length - 3 : 0,
       totalQty: (o.items || []).reduce((s, i) => s + (i.qty || 0), 0),
