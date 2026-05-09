@@ -66,30 +66,10 @@ Page({
       fail: () => {},
     })
   },
-  toggleListing(e) {
-    const id = e.currentTarget.dataset.id
-    const idx = this.data.list.findIndex((p) => p.id === id)
-    if (idx < 0) return
-    api.admin.product.toggleListing(id).then(() => {
-      const cur = this.data.list[idx]
-      const path = `list[${idx}].status`
-      this.setData({ [path]: cur.status === 1 ? 0 : 1 })
-      wx.showToast({ title: cur.status === 1 ? '已下架' : '已上架', icon: 'none' })
-    }).catch(() => {})
-  },
-  toggleWholesale(e) {
-    const id = e.currentTarget.dataset.id
-    const idx = this.data.list.findIndex((p) => p.id === id)
-    if (idx < 0) return
-    api.admin.product.toggleWholesale(id).then(() => {
-      const path = `list[${idx}].wholesaleEnabled`
-      this.setData({ [path]: !this.data.list[idx].wholesaleEnabled })
-      wx.showToast({ title: '已切换', icon: 'none' })
-    }).catch(() => {})
-  },
+  // toggleListing / toggleWholesale 已移到详情页（product-edit）统一管理。
+  // 列表页保持只读视图 + 整张卡片点击进入详情，避免误触造成下架/隐藏。
   goEdit(e) {
     const id = e.currentTarget.dataset.id
     wx.navigateTo({ url: `/pages/admin/product-edit/product-edit?id=${id}` })
   },
-  catchTap() {},
 })

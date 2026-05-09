@@ -41,9 +41,8 @@
         <text class="tag">SKU × {{item.skuCount}}</text>
       </view>
     </view>
-    <view class="ops" catchtap="catchTap">
-      <view class="op" data-id="{{item.id}}" catchtap="toggleListing">{{item.status === 1 ? '下架' : '上架'}}</view>
-      <view class="op" data-id="{{item.id}}" catchtap="toggleWholesale">{{item.wholesaleEnabled ? '隐藏批发' : '开放批发'}}</view>
+    <view class="ops">
+      <view class="op op--primary">编辑</view>
     </view>
   </view>
 

@@ -10,8 +10,6 @@ const DEFAULT_SITE_CONFIG = {
   agreementUrl: '',             // 用户协议 URL
   privacyUrl: '',               // 隐私政策 URL
   freeShippingThreshold: 0,     // 满 X 元包邮，0 = 关闭
-  wecomBotKey: '',              // 企业微信机器人 key（用于B2B采购单通知）
-  wecomWebhookKey: '',          // 兼容字段：企业微信机器人 key
   about: '',                    // 关于我们文本
 }
 
@@ -74,15 +72,8 @@ App({
     return this.globalData.siteConfig || DEFAULT_SITE_CONFIG
   },
 
-  // 企业微信机器人 key（优先后端站点配置，兼容本地调试配置）
-  getWecomBotKey() {
-    const cfg = this.getSiteConfig()
-    return cfg.wecomBotKey || cfg.wecomWebhookKey || wx.getStorageSync('wecom_bot_key') || ''
-  },
-
-  setWecomBotKey(key) {
-    if (key) wx.setStorageSync('wecom_bot_key', key)
-  },
+  // 企微机器人改由服务端 WorkWxService 通过 server/.env WORK_WX_BOT_WEBHOOK 推送，
+  // 客户端不再调用 qyapi.weixin.qq.com（小程序合法域名白名单不允许）。
 
   // 统一的"联系客服"入口
   callCustomerService() {

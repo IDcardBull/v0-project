@@ -29,6 +29,29 @@
         <text class="sku-price"><text class="unit">¥</text>{{item.price}}</text>
       </view>
 
+      <!-- 价格编辑 -->
+      <view class="price-row">
+        <text class="price-label">售价</text>
+        <view class="price-input-wrap">
+          <text class="unit">¥</text>
+          <input
+            class="price-input"
+            type="digit"
+            value="{{item.editingPrice}}"
+            data-idx="{{index}}"
+            bindinput="onPrice"
+          />
+        </view>
+        <view
+          class="price-save {{savingPrice[item.id] ? 'price-save--loading' : ''}}"
+          data-idx="{{index}}"
+          catchtap="savePrice"
+        >
+          <text>{{savingPrice[item.id] ? '…' : '保存价格'}}</text>
+        </view>
+      </view>
+
+      <!-- 库存编辑 -->
       <view class="stepper">
         <view class="step" data-idx="{{index}}" data-delta="-1" catchtap="step">−</view>
         <input

@@ -18,7 +18,8 @@ Page({
     product: null,
     skus: [],
     loading: true,
-    saving: {},
+    saving: {},        // 库存保存中
+    savingPrice: {},   // 价格保存中
   },
   onLoad(options) { this.setData({ id: options.id || '' }) },
   onShow() {
@@ -36,14 +37,23 @@ Page({
       api.admin.sku.listByProduct(this.data.id).catch(() => null),
     ]).then(([product, skuRes]) => {
       const rawSkus = (skuRes && (skuRes.list || skuRes.records || skuRes)) || product.skus || []
-      const skus = (Array.isArray(rawSkus) ? rawSkus : []).map((s) => ({
-        id: s.id,
-        spec: fmtSpec(s.specs),
-        code: s.skuCode || s.code || '',
-        price: fmtMoney(s.wholesalePrice || s.price || s.retailPrice),
-        stock: Number(s.stock || 0),
-        editing: String(s.stock || 0),
-      }))
+      const skus = (Array.isArray(rawSkus) ? rawSkus : []).map((s) => {
+        // 后端 SKU 表只有 retailPrice / memberPrice；批发阶梯价由 priceTiers 表管理。
+        // 这里改的是 retailPrice（基础售价），保存时也只发 retailPrice。
+        const rawPrice = s.retailPrice != null ? s.retailPrice
+          : (s.price != null ? s.price : (s.wholesalePrice != null ? s.wholesalePrice : 0))
+        const numPrice = Number(rawPrice) || 0
+        return {
+          id: s.id,
+          spec: fmtSpec(s.specs),
+          code: s.skuCode || s.code || '',
+          price: fmtMoney(rawPrice),     // 用于展示
+          rawPrice: numPrice,            // 比对是否改动
+          editingPrice: String(numPrice.toFixed(2)),
+          stock: Number(s.stock || 0),
+          editing: String(s.stock || 0),
+        }
+      })
       this.setData({
         product: {
           id: product.id,
@@ -61,6 +71,35 @@ Page({
   onStock(e) {
     const idx = e.currentTarget.dataset.idx
     this.setData({ [`skus[${idx}].editing`]: e.detail.value })
+  },
+  onPrice(e) {
+    const idx = e.currentTarget.dataset.idx
+    this.setData({ [`skus[${idx}].editingPrice`]: e.detail.value })
+  },
+  savePrice(e) {
+    const idx = Number(e.currentTarget.dataset.idx)
+    const sku = this.data.skus[idx]
+    const next = Number(sku.editingPrice)
+    if (!isFinite(next) || next < 0) {
+      return wx.showToast({ title: '价格无效', icon: 'none' })
+    }
+    if (Math.abs(next - Number(sku.rawPrice)) < 0.001) {
+      return wx.showToast({ title: '未改动', icon: 'none' })
+    }
+    this.setData({ [`savingPrice.${sku.id}`]: true })
+    api.admin.sku.updatePrice(sku.id, { retailPrice: next }).then((res) => {
+      const fresh = res && res.retailPrice != null ? Number(res.retailPrice) : next
+      this.setData({
+        [`skus[${idx}].rawPrice`]: fresh,
+        [`skus[${idx}].price`]: fmtMoney(fresh),
+        [`skus[${idx}].editingPrice`]: String(fresh.toFixed(2)),
+        [`savingPrice.${sku.id}`]: false,
+      })
+      wx.showToast({ title: '价格已更新', icon: 'none' })
+    }).catch((err) => {
+      this.setData({ [`savingPrice.${sku.id}`]: false })
+      wx.showToast({ title: (err && err.message) || '保存失败', icon: 'none' })
+    })
   },
   step(e) {
     const idx = Number(e.currentTarget.dataset.idx)

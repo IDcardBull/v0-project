@@ -145,6 +145,13 @@ const admin = {
     listByProduct: (productId) => http.get(`/admin/sku/by-product/${productId}`, null, { auth: adminAuth }),
     updateStock: (id, stock) =>
       http.patch(`/admin/sku/${id}/stock`, { stock: Number(stock) }, { auth: adminAuth }),
+    /**
+     * 修改 SKU 售价
+     * payload: { retailPrice?, memberPrice? } —— 至少传一个
+     * 后端 schema 里 SKU 只有 retailPrice / memberPrice 两个字段；批发阶梯价由 priceTiers 单独管理
+     */
+    updatePrice: (id, payload) =>
+      http.patch(`/admin/sku/${id}/price`, payload || {}, { auth: adminAuth }),
   },
 }
 

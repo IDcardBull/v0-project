@@ -9,7 +9,8 @@ const {
   pickTierPrice,
 } = require('../../utils/util.js')
 const { isProductVisible, orderChannelPayload } = require('../../utils/channel.js')
-const wecomBot = require('../../utils/wecom-bot.js')
+// 企微通知由服务端 WorkWxService 在 order.create 时主动推送（见 server/.env WORK_WX_BOT_WEBHOOK）。
+// 客户端不再直接调 qyapi.weixin.qq.com（会被小程序合法域名白名单拦截）。
 const app = getApp()
 
 Page({
@@ -174,37 +175,7 @@ Page({
       .join('')
   },
 
-  async sendWecomNotify(order, latestItems, address, remark) {
-    try {
-      const userInfo = wx.getStorageSync('userInfo') || {}
-      const orderInfo = {
-        orderNo: order.orderNo || order.order_no || order.id || order.orderId,
-          customerName: address.contact || address.receiver || address.name || userInfo.nickname || '',
-          customerPhone: address.phone || address.mobile || userInfo.phone || '',
-          address: this.formatAddress(address),
-        companyName: userInfo.companyName || userInfo.company || '',
-          items: latestItems.map((i) => ({
-          name: i.productName,
-          skuSpec: i.skuSpec,
-          skuImage: i.skuImage,
-          qty: i.qty,
-          price: i.unitPrice,
-        })),
-        subtotal: Number(this.data.goodsAmount || 0),
-        freight: Number(this.data.freight || 0),
-        total: Number(this.data.totalAmount || 0),
-        remark: remark || '',
-        time: new Date().toLocaleString(),
-      }
-      await wecomBot.submitPurchase(orderInfo)
-      return true
-    } catch (e) {
-      console.warn('send wecom purchase notify failed:', e)
-      return false
-    }
-  },
-
-  // 提交采购单：B2B 不调起微信支付，提交后通知企业微信客服群
+  // 提交采购单：B2B 不调起微信支付，订单创建后服务端 WorkWxService 自动推送企微
   async submit() {
     const { address, items, remark, submitting } = this.data
     if (submitting) return
@@ -232,18 +203,16 @@ Page({
         remark: remark || '',
       }))
 
-      const notified = await this.sendWecomNotify(order, latestItems, address, remark)
       wx.hideLoading()
 
       // 提交成功后立即清理购物车里的对应项
       cartStore.removeMany(latestItems.map((i) => i.skuId))
       app.refreshCartBadge()
 
+      // 服务端会在订单创建后异步推送企微（不阻塞主流程，失败也不影响下单）
       wx.showModal({
         title: '采购单已提交',
-        content: notified
-          ? '采购单已发送给客服，客服会尽快联系企业确认规格、数量、交期和结算方式。'
-          : '采购单已生成，但企微机器人暂未配置或发送失败，请客服在后台查看订单并主动对接。',
+        content: '客服已收到您的采购单，会尽快联系企业确认规格、数量、交期和结算方式。',
         showCancel: false,
         success: () => {
           wx.redirectTo({ url: `/pages/order-detail/order-detail?id=${toIdStr(order.id || order.orderId)}` })
