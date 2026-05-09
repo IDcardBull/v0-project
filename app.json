@@ -12,7 +12,13 @@
     "pages/address/address",
     "pages/address-edit/address-edit",
     "pages/checkout/checkout",
-    "pages/pay-result/pay-result"
+    "pages/pay-result/pay-result",
+    "pages/admin/login/login",
+    "pages/admin/index/index",
+    "pages/admin/orders/orders",
+    "pages/admin/order-detail/order-detail",
+    "pages/admin/products/products",
+    "pages/admin/product-edit/product-edit"
   ],
   "window": {
     "backgroundTextStyle": "dark",

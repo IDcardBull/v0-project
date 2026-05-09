@@ -19,18 +19,27 @@ const NO_AUTH_PATHS = [
   '/client/config',
 ]
 
+
+function isAdminPath(url) {
+  return typeof url === 'string' && url.indexOf('/admin/') === 0
+}
+
 function isPublic(url) {
   return NO_AUTH_PATHS.some((p) => url === p || url.startsWith(p + '?') || url.startsWith(p + '/'))
 }
 
 function request(options) {
   return new Promise((resolve, reject) => {
-    const token = wx.getStorageSync('token')
     const url = options.url
+    const isAdmin = options.auth === 'admin' || isAdminPath(url)
+    const token = isAdmin
+      ? (options.skipAuth ? '' : wx.getStorageSync('adminToken'))
+      : (options.skipAuth ? '' : wx.getStorageSync('token'))
 
-    // 需要登录但无 token 时直接跳登录
+    // 需要登录但无 token 时直接跳对应登录页
     if (!isPublic(url) && !token && !options.skipAuth) {
-      wx.navigateTo({ url: '/pages/login/login' })
+      const target = isAdmin ? '/pages/admin/login/login' : '/pages/login/login'
+      wx.navigateTo({ url: target })
       return reject(new Error('未登录'))
     }
 
@@ -51,12 +60,27 @@ function request(options) {
         if (options.loading) wx.hideLoading()
 
         if (res.statusCode === 401 || res.statusCode === 403) {
-          wx.removeStorageSync('token')
-          wx.removeStorageSync('userInfo')
-          const pages = getCurrentPages()
-          const cur = pages[pages.length - 1]
-          if (cur && cur.route !== 'pages/login/login') {
-            wx.reLaunch({ url: '/pages/login/login' })
+          if (isAdmin) {
+            wx.removeStorageSync('adminToken')
+            wx.removeStorageSync('adminInfo')
+            const app = getApp()
+            if (app && app.globalData) {
+              app.globalData.adminToken = ''
+              app.globalData.adminInfo = null
+            }
+            const pages = getCurrentPages()
+            const cur = pages[pages.length - 1]
+            if (cur && cur.route !== 'pages/admin/login/login' && !options.silent) {
+              wx.navigateTo({ url: '/pages/admin/login/login' })
+            }
+          } else {
+            wx.removeStorageSync('token')
+            wx.removeStorageSync('userInfo')
+            const pages = getCurrentPages()
+            const cur = pages[pages.length - 1]
+            if (cur && cur.route !== 'pages/login/login') {
+              wx.reLaunch({ url: '/pages/login/login' })
+            }
           }
           return reject(new Error('登录已过期，请重新登录'))
         }

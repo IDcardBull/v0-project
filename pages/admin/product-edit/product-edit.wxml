@@ -1,0 +1,59 @@
+<view class="page" wx:if="{{product}}">
+  <view class="head">
+    <image class="cover" src="{{product.cover}}" mode="aspectFill"></image>
+    <view class="meta">
+      <text class="name">{{product.name}}</text>
+      <view class="tags">
+        <text class="tag tag--{{product.status === 1 ? 'on' : 'off'}}">{{product.status === 1 ? '已上架' : '已下架'}}</text>
+        <text class="tag tag--{{product.wholesaleEnabled ? 'on' : 'off'}}">批发{{product.wholesaleEnabled ? '可见' : '隐藏'}}</text>
+      </view>
+      <view class="head-ops">
+        <view class="hop" bindtap="toggleListing">{{product.status === 1 ? '下架' : '上架'}}</view>
+        <view class="hop" bindtap="toggleWholesale">{{product.wholesaleEnabled ? '隐藏批发' : '开放批发'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="block">
+    <view class="block-head">
+      <text>SKU 库存</text>
+      <view class="scan-btn" bindtap="scanLocate">扫码定位</view>
+    </view>
+
+    <view wx:for="{{skus}}" wx:key="id" id="sku-{{item.id}}" class="sku-card">
+      <view class="sku-row">
+        <view class="sku-meta">
+          <text class="sku-spec">{{item.spec || '默认规格'}}</text>
+          <text wx:if="{{item.code}}" class="sku-code">{{item.code}}</text>
+        </view>
+        <text class="sku-price"><text class="unit">¥</text>{{item.price}}</text>
+      </view>
+
+      <view class="stepper">
+        <view class="step" data-idx="{{index}}" data-delta="-1" catchtap="step">−</view>
+        <input
+          class="step-input"
+          type="number"
+          value="{{item.editing}}"
+          data-idx="{{index}}"
+          bindinput="onStock"
+        />
+        <view class="step" data-idx="{{index}}" data-delta="1" catchtap="step">＋</view>
+        <view
+          class="step-save {{saving[item.id] ? 'step-save--loading' : ''}}"
+          data-idx="{{index}}"
+          catchtap="saveStock"
+        >
+          <text>{{saving[item.id] ? '…' : '保存'}}</text>
+        </view>
+      </view>
+      <text class="sku-tip">当前 {{item.stock}}</text>
+    </view>
+
+    <view wx:if="{{skus.length === 0}}" class="empty">
+      <text>该商品暂无 SKU</text>
+    </view>
+  </view>
+
+  <view style="height: 100rpx;"></view>
+</view>

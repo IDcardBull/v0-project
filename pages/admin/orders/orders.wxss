@@ -1,0 +1,120 @@
+page { background: #1f2a36; }
+.page { min-height: 100vh; padding-bottom: 80rpx; color: #f0f4f8; }
+
+.search { padding: 16rpx 32rpx; background: #1f2a36; }
+.search-input {
+  display: flex; align-items: center; gap: 16rpx;
+  height: 64rpx; padding: 0 24rpx;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1rpx solid rgba(180, 200, 220, 0.14);
+  border-radius: 8rpx;
+}
+.search-icon { color: rgba(240, 244, 248, 0.5); font-size: 28rpx; }
+.search-input input { flex: 1; font-size: 26rpx; color: #f0f4f8; }
+.ph { color: rgba(240, 244, 248, 0.3); }
+
+.tabs {
+  background: #1f2a36;
+  height: 80rpx;
+  white-space: nowrap;
+  border-bottom: 1rpx solid rgba(180, 200, 220, 0.06);
+}
+.tabs-inner { display: inline-flex; align-items: center; padding: 0 32rpx; height: 80rpx; gap: 36rpx; }
+.tab {
+  display: inline-flex; align-items: center; gap: 8rpx;
+  font-size: 26rpx; letter-spacing: 4rpx;
+  color: rgba(240, 244, 248, 0.55);
+  position: relative;
+}
+.tab--on { color: #b4c8dc; }
+.tab--on::after {
+  content: '';
+  position: absolute;
+  left: 50%; bottom: -16rpx;
+  transform: translateX(-50%);
+  width: 32rpx; height: 2rpx;
+  background: #b4c8dc;
+}
+.badge {
+  font-size: 18rpx;
+  padding: 0 10rpx;
+  height: 28rpx; line-height: 28rpx;
+  background: rgba(180, 200, 220, 0.18);
+  color: #b4c8dc;
+  border-radius: 14rpx;
+}
+
+.empty {
+  margin: 120rpx auto 0;
+  display: flex; flex-direction: column; align-items: center; gap: 16rpx;
+  color: rgba(240, 244, 248, 0.5);
+  font-size: 26rpx;
+}
+.seal {
+  width: 96rpx; height: 96rpx; line-height: 96rpx;
+  border: 1rpx solid rgba(180, 200, 220, 0.3);
+  color: rgba(180, 200, 220, 0.7);
+  border-radius: 8rpx;
+  font-size: 36rpx; text-align: center;
+}
+.empty-cn { font-size: 28rpx; letter-spacing: 4rpx; }
+
+.card {
+  margin: 16rpx 32rpx 0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1rpx solid rgba(180, 200, 220, 0.12);
+  border-radius: 16rpx;
+  padding: 28rpx 32rpx;
+}
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx dashed rgba(180, 200, 220, 0.14);
+  margin-bottom: 16rpx;
+}
+.head-left { display: flex; flex-direction: column; gap: 4rpx; min-width: 0; }
+.order-no { font-size: 22rpx; color: rgba(240, 244, 248, 0.5); letter-spacing: 1rpx; }
+.user { font-size: 26rpx; color: #f0f4f8; letter-spacing: 1rpx; }
+.status {
+  font-size: 24rpx; letter-spacing: 4rpx;
+  padding: 6rpx 14rpx;
+  border: 1rpx solid;
+  border-radius: 20rpx;
+  flex-shrink: 0;
+}
+.status-pending_pay { color: #e8c36f; border-color: rgba(232, 195, 111, 0.4); }
+.status-pending_ship { color: #b4c8dc; border-color: rgba(180, 200, 220, 0.4); }
+.status-shipped { color: #c8a882; border-color: rgba(200, 168, 130, 0.4); }
+.status-completed { color: rgba(240, 244, 248, 0.5); border-color: rgba(240, 244, 248, 0.2); }
+.status-after_sale { color: #e89c8e; border-color: rgba(232, 156, 142, 0.4); }
+.status-closed, .status-cancelled { color: rgba(240, 244, 248, 0.4); border-color: rgba(240, 244, 248, 0.18); }
+
+.goods-list { display: flex; flex-direction: column; gap: 16rpx; }
+.goods-row { display: flex; gap: 16rpx; }
+.goods-img {
+  width: 120rpx; height: 120rpx; border-radius: 8rpx; flex-shrink: 0;
+  background: rgba(180, 200, 220, 0.08);
+}
+.goods-meta { flex: 1; display: flex; flex-direction: column; gap: 6rpx; min-width: 0; }
+.goods-name {
+  font-size: 26rpx; color: #f0f4f8; letter-spacing: 1rpx;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.goods-spec { font-size: 22rpx; color: rgba(240, 244, 248, 0.5); }
+.goods-bottom { display: flex; justify-content: space-between; }
+.goods-price { font-size: 28rpx; color: #f0f4f8; }
+.goods-price .unit { font-size: 20rpx; color: rgba(240, 244, 248, 0.5); margin-right: 4rpx; }
+.goods-qty { font-size: 22rpx; color: rgba(240, 244, 248, 0.5); }
+
+.card-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 16rpx;
+  margin-top: 16rpx;
+  border-top: 1rpx dashed rgba(180, 200, 220, 0.14);
+}
+.foot-qty { font-size: 22rpx; color: rgba(240, 244, 248, 0.5); }
+.foot-amount { font-size: 22rpx; color: rgba(240, 244, 248, 0.55); }
+.foot-amount .big { font-size: 32rpx; color: #b4c8dc; margin-left: 8rpx; }
+.foot-amount .big .unit { font-size: 20rpx; margin-right: 4rpx; color: rgba(180, 200, 220, 0.7); }
+
+.more { text-align: center; margin: 32rpx 0; font-size: 22rpx; color: rgba(240, 244, 248, 0.4); letter-spacing: 4rpx; }

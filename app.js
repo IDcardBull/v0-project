@@ -27,6 +27,12 @@ App({
       this.globalData.userInfo = wx.getStorageSync('userInfo') || null
     }
 
+    const adminToken = wx.getStorageSync('adminToken')
+    if (adminToken) {
+      this.globalData.adminToken = adminToken
+      this.globalData.adminInfo = wx.getStorageSync('adminInfo') || null
+    }
+
     // 优先使用本地缓存的站点配置（避免冷启动空白）
     const cached = wx.getStorageSync('siteConfig')
     if (cached) {
@@ -138,7 +144,30 @@ App({
     }
   },
 
+
+  // ---------- 管理员（移动端工作台）----------
+  setAdmin(payload) {
+    if (!payload) return
+    const token = payload.token || ''
+    const user = payload.user || null
+    this.globalData.adminToken = token
+    this.globalData.adminInfo = user
+    if (token) wx.setStorageSync('adminToken', token)
+    if (user) wx.setStorageSync('adminInfo', user)
+  },
+  clearAdmin() {
+    this.globalData.adminToken = ''
+    this.globalData.adminInfo = null
+    wx.removeStorageSync('adminToken')
+    wx.removeStorageSync('adminInfo')
+  },
+  isAdmin() {
+    return !!(this.globalData.adminToken || wx.getStorageSync('adminToken'))
+  },
+
   globalData: {
+    adminToken: '',
+    adminInfo: null,
     token: '',
     userInfo: null,
     companyName: '央皿陶瓷',

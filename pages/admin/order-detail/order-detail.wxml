@@ -1,0 +1,195 @@
+<view class="page" wx:if="{{order}}">
+  <!-- 状态条 -->
+  <view class="status-hero status-hero--{{order.statusKey}}">
+    <text class="hero-status">{{order.statusLabel}}</text>
+    <text class="hero-note">{{order.statusNote}}</text>
+  </view>
+
+  <!-- 客户信息 -->
+  <view class="block">
+    <view class="block-head"><text>客户</text></view>
+    <view class="address-card">
+      <view class="addr-row">
+        <text class="addr-name">{{order.user.nickname || '匿名客户'}}</text>
+        <text wx:if="{{order.user.phone}}" class="addr-phone" bindtap="callUser">{{order.user.phone}} ›</text>
+      </view>
+      <view wx:if="{{order.address}}" class="addr-row">
+        <text class="addr-name">{{order.address.receiver}}</text>
+        <text class="addr-phone">{{order.address.phone}}</text>
+      </view>
+      <text wx:if="{{order.address}}" class="addr-detail">{{order.address.full}}</text>
+      <text wx:elif="{{!order.address}}" class="addr-empty">尚未填写收货地址</text>
+    </view>
+  </view>
+
+  <!-- 商品 -->
+  <view class="block">
+    <view class="block-head"><text>商品 · 共 {{order.totalQty}} 件</text></view>
+    <view class="goods-card">
+      <view wx:for="{{order.items}}" wx:for-item="goods" wx:key="id" class="goods-row">
+        <image class="goods-img" src="{{goods.image}}" mode="aspectFill"></image>
+        <view class="goods-meta">
+          <text class="goods-name">{{goods.name}}</text>
+          <text wx:if="{{goods.spec}}" class="goods-spec">{{goods.spec}}</text>
+          <view class="goods-bottom">
+            <text class="goods-price"><text class="unit">¥</text>{{goods.price}}</text>
+            <text class="goods-qty">× {{goods.quantity}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 金额 -->
+  <view class="block">
+    <view class="block-head"><text>金额</text></view>
+    <view class="amount-card">
+      <view class="amt-row"><text>商品小计</text><text>¥ {{order.subtotal}}</text></view>
+      <view class="amt-row"><text>运费</text><text>¥ {{order.freight}}</text></view>
+      <view wx:if="{{order.discount !== '0.00'}}" class="amt-row"><text>优惠</text><text>- ¥ {{order.discount}}</text></view>
+      <view class="amt-row amt-total">
+        <text>订单总价</text>
+        <text class="amt-total-val">¥ {{order.total}}</text>
+      </view>
+      <view wx:if="{{order.paidAmount !== '0.00'}}" class="amt-row"><text>已收</text><text>¥ {{order.paidAmount}}</text></view>
+    </view>
+  </view>
+
+  <!-- 订单信息 -->
+  <view class="block">
+    <view class="block-head"><text>订单信息</text></view>
+    <view class="info-card">
+      <view class="info-row" bindtap="copyOrderNo">
+        <text class="info-key">订单号</text>
+        <text class="info-val">{{order.orderNo}} ⎘</text>
+      </view>
+      <view class="info-row"><text class="info-key">下单时间</text><text class="info-val">{{order.createdAt}}</text></view>
+      <view wx:if="{{order.paidAt}}" class="info-row"><text class="info-key">付款时间</text><text class="info-val">{{order.paidAt}}</text></view>
+      <view wx:if="{{order.shippedAt}}" class="info-row"><text class="info-key">发货时间</text><text class="info-val">{{order.shippedAt}}</text></view>
+      <view wx:if="{{order.remark}}" class="info-row info-row--multi">
+        <text class="info-key">备注</text>
+        <text class="info-val info-val--multi">{{order.remark}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view style="height: 200rpx;"></view>
+
+  <!-- 操作栏 -->
+  <view class="action-bar">
+    <block wx:if="{{order.statusKey === 'pending_pay'}}">
+      <view class="btn btn-ghost" bindtap="closeOrder">关闭</view>
+      <view class="btn btn-ghost" bindtap="openPrice">改价</view>
+      <view class="btn btn-primary" bindtap="markPaid">标记已收款</view>
+    </block>
+    <block wx:elif="{{order.statusKey === 'pending_ship'}}">
+      <view class="btn btn-ghost" bindtap="closeOrder">关闭</view>
+      <view class="btn btn-primary btn-wide" bindtap="openShip">发货</view>
+    </block>
+    <block wx:elif="{{order.statusKey === 'shipped'}}">
+      <view class="btn btn-ghost btn-wide" bindtap="complete">标记完成</view>
+    </block>
+    <block wx:else>
+      <text class="bar-tip">订单状态为「{{order.statusLabel}}」</text>
+    </block>
+  </view>
+</view>
+
+<!-- 发货弹层 -->
+<view wx:if="{{showShip}}" class="mask" bindtap="closeShip">
+  <view class="sheet" catchtap="">
+    <view class="sheet-head">
+      <text class="sheet-title">发货</text>
+      <text class="sheet-close" bindtap="closeShip">×</text>
+    </view>
+
+    <view class="form">
+      <view class="form-item">
+        <text class="form-label">物流公司 / 专线</text>
+        <picker bindchange="onCompany" range="{{companies}}" value="{{0}}">
+          <view class="picker-row">
+            <input
+              class="form-input"
+              value="{{shipForm.company}}"
+              bindinput="onCompanyManual"
+              placeholder="选择或手填"
+              placeholder-class="ph"
+            />
+            <text class="picker-arrow">▾</text>
+          </view>
+        </picker>
+      </view>
+      <view class="form-item">
+        <text class="form-label">物流单号 / 司机电话</text>
+        <view class="form-row">
+          <input
+            class="form-input"
+            value="{{shipForm.tracking}}"
+            bindinput="onTracking"
+            placeholder="可扫描运单条码"
+            placeholder-class="ph"
+          />
+          <view class="form-scan" bindtap="scanTracking">扫</view>
+        </view>
+      </view>
+      <view class="form-item">
+        <text class="form-label">备注</text>
+        <textarea
+          class="form-area"
+          value="{{shipForm.remark}}"
+          bindinput="onRemark"
+          placeholder="选填，例如：周二下午发车"
+          placeholder-class="ph"
+          maxlength="200"
+        />
+      </view>
+    </view>
+
+    <view class="sheet-action {{saving ? 'sheet-action--loading' : ''}}" bindtap="submitShip">
+      <text>{{saving ? '提交中…' : '确认发货'}}</text>
+    </view>
+  </view>
+</view>
+
+<!-- 改价弹层 -->
+<view wx:if="{{showPrice}}" class="mask" bindtap="closePrice">
+  <view class="sheet" catchtap="">
+    <view class="sheet-head">
+      <text class="sheet-title">修改总价</text>
+      <text class="sheet-close" bindtap="closePrice">×</text>
+    </view>
+
+    <view class="form">
+      <view class="price-orig">
+        <text class="price-key">原总价</text>
+        <text class="price-val">¥ {{order.total}}</text>
+      </view>
+      <view class="form-item">
+        <text class="form-label">新总价（元）</text>
+        <input
+          class="form-input form-input--big"
+          type="digit"
+          value="{{priceForm.amount}}"
+          bindinput="onAmount"
+          placeholder="例如 1280.00"
+          placeholder-class="ph"
+        />
+      </view>
+      <view class="form-item">
+        <text class="form-label">改价说明</text>
+        <input
+          class="form-input"
+          value="{{priceForm.reason}}"
+          bindinput="onReason"
+          placeholder="选填，例如：议价 / 折扣 / 补差"
+          placeholder-class="ph"
+        />
+      </view>
+      <text class="price-tip">改价后客户重新支付即可。系统会留痕。</text>
+    </view>
+
+    <view class="sheet-action {{saving ? 'sheet-action--loading' : ''}}" bindtap="submitPrice">
+      <text>{{saving ? '提交中…' : '保存新总价'}}</text>
+    </view>
+  </view>
+</view>
