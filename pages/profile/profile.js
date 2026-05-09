@@ -127,32 +127,25 @@ Page({
     app.callCustomerService()
   },
 
-  // 关于央皿陶瓷：弹出公司简介
-  // 隐藏：连续 7 次点击进入主理人工作台登录入口
-  _aboutTaps: 0,
-  _aboutTimer: null,
+  // 关于央皿陶瓷：弹出公司简介，并提供"管理员入口"次按钮。
+  // 之前的 7 连点暗门体验差（每次点击都弹 modal，挡住了连击），改成 modal 自带入口。
   showAbout() {
-    this._aboutTaps = (this._aboutTaps || 0) + 1
-    if (this._aboutTimer) clearTimeout(this._aboutTimer)
-    this._aboutTimer = setTimeout(() => { this._aboutTaps = 0 }, 1500)
-
-    if (this._aboutTaps >= 7) {
-      this._aboutTaps = 0
-      if (app.isAdmin()) {
-        wx.navigateTo({ url: '/pages/admin/index/index' })
-      } else {
-        wx.navigateTo({ url: '/pages/admin/login/login' })
-      }
-      return
-    }
-
     const cfg = app.getSiteConfig()
     const content = cfg.about || `${app.globalData.companyName} · 景德镇源头工厂\n版本 ${this.data.version || '未知'}`
     wx.showModal({
       title: '关于我们',
       content,
-      showCancel: false,
       confirmText: '知道了',
+      cancelText: '管理员入口',
+      cancelColor: '#999999',
+      success: (res) => {
+        if (!res || !res.cancel) return
+        if (app.isAdmin()) {
+          wx.navigateTo({ url: '/pages/admin/index/index' })
+        } else {
+          wx.navigateTo({ url: '/pages/admin/login/login' })
+        }
+      },
     })
   },
 

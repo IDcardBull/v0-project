@@ -47,10 +47,20 @@ function request(options) {
       wx.showLoading({ title: options.loadingText || '加载中', mask: true })
     }
 
+    // 修复：wx.request 在写方法（POST/PUT/PATCH/DELETE）下若 data=null/undefined，
+    // 会把字符串 "null" 作为 body 发出。后端 NestJS 启用了 rawBody+严格 JSON 解析后，
+    // 对根值为 null 的 body 直接抛 SyntaxError "Unexpected token 'n'..."。
+    // 这里统一在写方法下兜底为 {}，让 body 永远是合法对象。
+    const writeMethods = ['POST', 'PUT', 'PATCH', 'DELETE']
+    const methodUpper = (options.method || 'GET').toUpperCase()
+    const safeData = writeMethods.indexOf(methodUpper) >= 0 && options.data == null
+      ? {}
+      : options.data
+
     wx.request({
       url: BASE_URL + url,
       method: options.method || 'GET',
-      data: options.data,
+      data: safeData,
       header: {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: 'Bearer ' + token } : {}),
