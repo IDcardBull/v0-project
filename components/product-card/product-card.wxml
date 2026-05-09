@@ -14,15 +14,6 @@
   <view class="pc-body">
     <view class="pc-title ellipsis-2">{{product.name}}</view>
 
-    <view wx:if="{{product.brand && product.brand.name}}" class="pc-brand">
-      {{product.brand.name}}
-    </view>
-
-    <view class="pc-tags" wx:if="{{product.craft || product.material}}">
-      <text wx:if="{{product.craft}}" class="tag">{{product.craft}}</text>
-      <text wx:if="{{product.material}}" class="tag">{{product.material}}</text>
-    </view>
-
     <view class="pc-moq">{{minQtyText}}</view>
 
     <view class="pc-foot">

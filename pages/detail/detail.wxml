@@ -29,11 +29,6 @@
   <!-- 标题 -->
   <view class="d-title-card">
     <view class="d-title">{{product.name}}</view>
-    <view class="d-attrs" wx:if="{{product.craft || product.material}}">
-      <text wx:if="{{product.craft}}" class="tag">{{product.craft}}</text>
-      <text wx:if="{{product.material}}" class="tag">{{product.material}}</text>
-      <text wx:if="{{product.brand && product.brand.name}}" class="tag">{{product.brand.name}}</text>
-    </view>
     <view class="d-sku">货号 {{product.code}}</view>
   </view>
 

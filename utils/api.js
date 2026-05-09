@@ -25,11 +25,10 @@ const user = {
   updateProfile: (data) => http.patch('/client/user/profile', data),
 }
 
-// ---------- 商品 / 分类 / 品牌 ----------
+// ---------- 商品 / 分类 ----------
 const product = {
   categoriesTree: () => http.get('/client/categories/tree'),
   categories: () => http.get('/client/categories'),
-  brands: () => http.get('/client/brands'),
   list: (params = {}) => http
     .get('/client/product/list', channelParams(params), { silent: true })
     .catch(() => http.get('/client/products', channelParams(params)))

@@ -14,7 +14,6 @@ const NO_AUTH_PATHS = [
   '/client/auth/phone-login',
   '/client/categories',
   '/client/categories/tree',
-  '/client/brands',
   '/client/product/list',
   '/client/products',
   '/client/config',
