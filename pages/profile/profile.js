@@ -128,7 +128,24 @@ Page({
   },
 
   // 关于央皿陶瓷：弹出公司简介
+  // 隐藏：连续 7 次点击进入主理人工作台登录入口
+  _aboutTaps: 0,
+  _aboutTimer: null,
   showAbout() {
+    this._aboutTaps = (this._aboutTaps || 0) + 1
+    if (this._aboutTimer) clearTimeout(this._aboutTimer)
+    this._aboutTimer = setTimeout(() => { this._aboutTaps = 0 }, 1500)
+
+    if (this._aboutTaps >= 7) {
+      this._aboutTaps = 0
+      if (app.isAdmin()) {
+        wx.navigateTo({ url: '/pages/admin/index/index' })
+      } else {
+        wx.navigateTo({ url: '/pages/admin/login/login' })
+      }
+      return
+    }
+
     const cfg = app.getSiteConfig()
     const content = cfg.about || `${app.globalData.companyName} · 景德镇源头工厂\n版本 ${this.data.version || '未知'}`
     wx.showModal({

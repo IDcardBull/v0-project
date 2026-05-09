@@ -1,0 +1,115 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-row">
+      <view class="hero-text">
+        <text class="hero-greet">早安</text>
+        <text class="hero-name">{{admin.realName || admin.username || '主理人'}}</text>
+      </view>
+      <view class="hero-out" bindtap="signOut">
+        <text>退出</text>
+      </view>
+    </view>
+    <text class="hero-sub">批发渠道 · 今日动态</text>
+  </view>
+
+  <view class="kpi-row">
+    <view class="kpi-primary" data-status="pending_ship" bindtap="goOrders">
+      <text class="k-label">待发货</text>
+      <text class="k-value">{{overview.pendingShipCount}}</text>
+      <text class="k-action">立即处理 ›</text>
+    </view>
+    <view class="kpi-col">
+      <view class="kpi-mini" data-status="" bindtap="goOrders">
+        <text class="km-label">今日批发单</text>
+        <text class="km-value">{{overview.todayOrderCount}}</text>
+      </view>
+      <view class="kpi-mini">
+        <text class="km-label">今日应收</text>
+        <text class="km-value"><text class="unit">¥</text>{{overview.todayOrderAmount}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="block">
+    <view class="block-head">
+      <text class="head-cn">订单概览</text>
+      <text class="head-en">ORDERS</text>
+    </view>
+    <view class="status-grid">
+      <view class="status-cell" data-status="pending_pay" bindtap="goOrders">
+        <text class="snum">{{counts.pending_pay}}</text>
+        <text class="slabel">待付款</text>
+      </view>
+      <view class="status-cell" data-status="pending_ship" bindtap="goOrders">
+        <text class="snum">{{counts.pending_ship}}</text>
+        <text class="slabel">待发货</text>
+      </view>
+      <view class="status-cell" data-status="shipped" bindtap="goOrders">
+        <text class="snum">{{counts.shipped}}</text>
+        <text class="slabel">在途</text>
+      </view>
+      <view class="status-cell" data-status="completed" bindtap="goOrders">
+        <text class="snum">{{counts.completed}}</text>
+        <text class="slabel">已完成</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="block">
+    <view class="block-head">
+      <text class="head-cn">商品 · 库存</text>
+      <text class="head-en">CATALOG</text>
+    </view>
+    <view class="grid">
+      <view class="g-item" bindtap="goProducts">
+        <text class="gnum">{{overview.productCount}}</text>
+        <text class="glabel">商品</text>
+      </view>
+      <view class="g-item" bindtap="goProducts">
+        <text class="gnum">{{overview.skuCount}}</text>
+        <text class="glabel">SKU</text>
+      </view>
+      <view class="g-item warn" bindtap="goProducts">
+        <text class="gnum">{{overview.lowStockCount}}</text>
+        <text class="glabel">低库存预警</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="actions">
+    <view class="action" data-status="pending_ship" bindtap="goOrders">
+      <text class="a-glyph">发</text>
+      <view class="a-text">
+        <text class="a-cn">订单发货</text>
+        <text class="a-en">SHIPPING</text>
+      </view>
+      <text class="a-arrow">›</text>
+    </view>
+    <view class="action" data-status="pending_pay" bindtap="goOrders">
+      <text class="a-glyph">价</text>
+      <view class="a-text">
+        <text class="a-cn">改价确认</text>
+        <text class="a-en">PRICING</text>
+      </view>
+      <text class="a-arrow">›</text>
+    </view>
+    <view class="action" bindtap="goProducts">
+      <text class="a-glyph">货</text>
+      <view class="a-text">
+        <text class="a-cn">商品 / 库存</text>
+        <text class="a-en">CATALOG</text>
+      </view>
+      <text class="a-arrow">›</text>
+    </view>
+    <view class="action" bindtap="goShop">
+      <text class="a-glyph">客</text>
+      <view class="a-text">
+        <text class="a-cn">回到客户端</text>
+        <text class="a-en">SHOP VIEW</text>
+      </view>
+      <text class="a-arrow">›</text>
+    </view>
+  </view>
+
+  <view style="height: 200rpx;"></view>
+</view>
