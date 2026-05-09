@@ -127,26 +127,53 @@ Page({
     app.callCustomerService()
   },
 
-  // 关于央皿陶瓷：弹出公司简介，并提供"管理员入口"次按钮。
-  // 之前的 7 连点暗门体验差（每次点击都弹 modal，挡住了连击），改成 modal 自带入口。
+  // 关于央皿陶瓷：连续 7 次点击进入主理人工作台登录入口。
+  // 关键修复：之前每次点击都立刻弹 modal，会挡住后续连击导致暗门进不去。
+  // 改成"先累计计数 + 轻 toast，普通用户的关于弹窗推迟到 1.2s 没再点击时才弹"，
+  // 既保留 7 连点入口，普通顾客单击也能正常看到关于内容。
+  _aboutTaps: 0,
+  _aboutTimer: null,
   showAbout() {
-    const cfg = app.getSiteConfig()
-    const content = cfg.about || `${app.globalData.companyName} · 景德镇源头工厂\n版本 ${this.data.version || '未知'}`
-    wx.showModal({
-      title: '关于我们',
-      content,
-      confirmText: '知道了',
-      cancelText: '管理员入口',
-      cancelColor: '#999999',
-      success: (res) => {
-        if (!res || !res.cancel) return
-        if (app.isAdmin()) {
-          wx.navigateTo({ url: '/pages/admin/index/index' })
-        } else {
-          wx.navigateTo({ url: '/pages/admin/login/login' })
-        }
-      },
-    })
+    this._aboutTaps = (this._aboutTaps || 0) + 1
+    if (this._aboutTimer) clearTimeout(this._aboutTimer)
+
+    // 已达 7 次：直接进管理员页，并清掉计数 / 不再弹关于
+    if (this._aboutTaps >= 7) {
+      this._aboutTaps = 0
+      wx.hideToast()
+      if (app.isAdmin()) {
+        wx.navigateTo({ url: '/pages/admin/index/index' })
+      } else {
+        wx.navigateTo({ url: '/pages/admin/login/login' })
+      }
+      return
+    }
+
+    // 第 4 次起给非阻塞的轻提示（不会挡住下一次点击），方便确认进度
+    if (this._aboutTaps >= 4) {
+      wx.showToast({
+        title: '还差 ' + (7 - this._aboutTaps) + ' 次',
+        icon: 'none',
+        duration: 800,
+        mask: false,
+      })
+    }
+
+    // 1.2s 没再点 → 视为普通用户单击；只有"单次点击"才弹关于，连点过程不打扰
+    const self = this
+    this._aboutTimer = setTimeout(function () {
+      const taps = self._aboutTaps
+      self._aboutTaps = 0
+      if (taps !== 1) return
+      const cfg = app.getSiteConfig()
+      const content = cfg.about || (app.globalData.companyName + ' · 景德镇源头工厂\n版本 ' + (self.data.version || '未知'))
+      wx.showModal({
+        title: '关于我们',
+        content,
+        showCancel: false,
+        confirmText: '知道了',
+      })
+    }, 1200)
   },
 
   // 用户协议 / 隐私政策
