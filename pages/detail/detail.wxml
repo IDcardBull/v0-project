@@ -18,7 +18,6 @@
       <text class="d-ccy">¥</text>
       <text class="d-price">{{currentPrice}}</text>
       <text class="d-unit">起</text>
-      <text class="d-moq">≥ {{minQty}} 件起批</text>
     </view>
     <view class="d-price-sub">
       <text>已售 {{product.salesCount || 0}}</text>
@@ -79,8 +78,7 @@
   <view class="d-section">
     <view class="d-section-title">数量</view>
     <view class="d-qty-row">
-      <quantity-stepper value="{{qty}}" min="{{minQty}}" bind:change="onQtyChange" />
-      <text class="d-qty-tip">至少 {{minQty}} 件起批</text>
+      <quantity-stepper value="{{qty}}" min="1" bind:change="onQtyChange" />
     </view>
   </view>
 

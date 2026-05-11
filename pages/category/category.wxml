@@ -57,7 +57,6 @@
           <view wx:else class="rec-img rec-img-empty">暂无图</view>
           <view class="rec-name ellipsis-2">{{item.name}}</view>
           <view class="rec-price">¥{{item.price}}<text class="rec-unit"> 起</text></view>
-          <view class="rec-moq">≥{{item.minQty}} 件起批</view>
         </view>
       </view>
     </scroll-view>
