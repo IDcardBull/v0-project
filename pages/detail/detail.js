@@ -6,7 +6,6 @@ const {
   pickTierPrice,
   getBasePrice,
   getSkuPriceTiers,
-  getMinWholesaleQty,
 } = require('../../utils/util.js')
 const { isProductVisible } = require('../../utils/channel.js')
 
@@ -80,9 +79,6 @@ Page({
         selectedSpec[k] = skuMap[k][0]
       })
 
-      const defaultTiers = getSkuPriceTiers(skus[0], p)
-      const minQty = getMinWholesaleQty(p, defaultTiers)
-
       this.setData({
         product: p,
         images,
@@ -90,8 +86,8 @@ Page({
         skus,
         skuMap,
         selectedSpec,
-        minQty,
-        qty: minQty,
+        minQty: 1,
+        qty: 1,
         detailHtml: p.detail || '',
       })
       this.matchSku()
@@ -156,7 +152,7 @@ Page({
   },
 
   onQtyChange(e) {
-    const qty = Math.max(this.data.minQty, Number(e.detail.value) || this.data.minQty)
+    const qty = Math.max(1, Number(e.detail.value) || 1)
     this.setData({ qty }, () => this.matchSku())
   },
 
@@ -166,13 +162,9 @@ Page({
   },
 
   addToCart() {
-    const { activeSku, qty, minQty, product, priceTiers, currentPrice } = this.data
+    const { activeSku, qty, product, priceTiers, currentPrice } = this.data
     if (!activeSku) {
       wx.showToast({ title: '请选择规格', icon: 'none' })
-      return
-    }
-    if (qty < minQty) {
-      wx.showToast({ title: `至少 ${minQty} 件起批`, icon: 'none' })
       return
     }
     if (activeSku.stock != null && qty > activeSku.stock) {
@@ -197,7 +189,7 @@ Page({
       retailPrice: getBasePrice(activeSku),
       memberPrice: activeSku.memberPrice ? Number(activeSku.memberPrice) : null,
       priceTiers: priceTiers,
-      minWholesaleQty: minQty,
+      minWholesaleQty: 1,
       stock: activeSku.stock,
       retailEnabled: product.retailEnabled === true,
       wholesaleEnabled: product.wholesaleEnabled === true,

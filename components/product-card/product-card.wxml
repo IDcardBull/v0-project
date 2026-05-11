@@ -19,7 +19,6 @@
       <view class="pc-price-wrap">
         <text class="pc-price-currency">¥</text>
         <text class="pc-price">{{priceText}}</text>
-        <text class="pc-unit">起</text>
       </view>
       <view class="pc-sales">{{salesText}}</view>
     </view>

@@ -57,7 +57,6 @@ Page({
         name: p.name,
         image: p.mainImage,
         price: formatPrice(p.retailPrice),
-        minQty: p.minWholesaleQty || 1,
       }))
       this.setData({ recList: list })
     } catch (e) {

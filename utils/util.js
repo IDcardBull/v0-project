@@ -34,7 +34,13 @@ function getBasePrice(item) {
   )
 }
 
-function normalizePriceTiers(source) {
+// 已下线阶梯价：批发端不再展示「N 件起 X 元」，统一返回空数组让所有调用方走单价路径
+function normalizePriceTiers(_source) {
+  return []
+}
+
+// 兼容保留：原阶梯解析逻辑（已禁用）
+function _legacyNormalizePriceTiers(source) {
   const raw = source && (
     source.priceTiers ||
     source.price_tiers ||
@@ -80,17 +86,11 @@ function getSkuPriceTiers(sku, product) {
   return normalizePriceTiers(product)
 }
 
-function getMinWholesaleQty(product, tiers = []) {
-  const configured = firstValidNumber(
-    product && product.minWholesaleQty,
-    product && product.min_wholesale_qty,
-    product && product.minOrderQty,
-    product && product.min_order_qty
-  )
-  if (configured > 0) return configured
-  if (tiers.length && tiers[0].minQty > 0) return tiers[0].minQty
+// 已下线起订量限制：批发端统一 1 件起，不再读取后端 minOrderQty / 阶梯首档
+function getMinWholesaleQty(_product, _tiers = []) {
   return 1
 }
+
 
 // 时间格式化：ISO -> "YYYY-MM-DD HH:mm"
 function formatTime(iso, withSecond = false) {

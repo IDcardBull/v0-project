@@ -17,7 +17,6 @@
     <view class="d-price-main">
       <text class="d-ccy">¥</text>
       <text class="d-price">{{currentPrice}}</text>
-      <text class="d-unit">起</text>
     </view>
     <view class="d-price-sub">
       <text>已售 {{product.salesCount || 0}}</text>
@@ -57,22 +56,8 @@
     </view>
   </view>
 
-  <!-- 阶梯价 -->
-  <view class="d-section" wx:if="{{priceTiers.length > 0}}">
-    <view class="d-section-title">阶梯价</view>
-    <view class="d-tier-table">
-      <view
-        wx:for="{{priceTiers}}"
-        wx:key="minQty"
-        class="d-tier-row {{qty >= item.minQty && (item.maxQty == null || qty <= item.maxQty) ? 'active' : ''}}"
-      >
-        <view class="d-tier-range">
-          {{item.minQty}}{{item.maxQty ? '-' + item.maxQty : '+'}} 件
-        </view>
-        <view class="d-tier-price">¥{{item.price}}<text class="d-tier-unit">/件</text></view>
-      </view>
-    </view>
-  </view>
+  <!-- 阶梯价已下线：批发端只展示单价 -->
+
 
   <!-- 数量 -->
   <view class="d-section">

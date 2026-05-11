@@ -3,8 +3,6 @@
 const {
   formatPrice,
   getBasePrice,
-  normalizePriceTiers,
-  getMinWholesaleQty,
 } = require('../../utils/util.js')
 
 Component({
@@ -17,7 +15,6 @@ Component({
   data: {
     priceText: '0.00',
     salesText: '',
-    minQtyText: '',
     coverUrl: '',
     tagText: '',
   },
@@ -25,17 +22,12 @@ Component({
   observers: {
     product(p) {
       if (!p) return
-      const tiers = normalizePriceTiers(p)
-      const basePrice = getBasePrice(p)
-      const price = tiers.length ? tiers[0].price : basePrice
+      const price = getBasePrice(p)
       const sales = p.salesCount > 0 ? `已售 ${p.salesCount}` : '暂无销量'
-      const minQty = getMinWholesaleQty(p, tiers)
-      const minQtyText = minQty > 1 ? `≥ ${minQty} 件起批` : '1 件起批'
       const tag = (p.tags && p.tags[0]) || ''
       this.setData({
         priceText: formatPrice(price),
         salesText: sales,
-        minQtyText,
         coverUrl: p.mainImage || '',
         tagText: tag,
       })

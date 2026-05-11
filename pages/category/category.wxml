@@ -56,7 +56,7 @@
           <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" class="rec-img" />
           <view wx:else class="rec-img rec-img-empty">暂无图</view>
           <view class="rec-name ellipsis-2">{{item.name}}</view>
-          <view class="rec-price">¥{{item.price}}<text class="rec-unit"> 起</text></view>
+          <view class="rec-price">¥{{item.price}}</view>
         </view>
       </view>
     </scroll-view>
