@@ -5,8 +5,10 @@
 // 401 自动清 token 并跳登录
 // =====================================================
 
-// TODO: 上线前改为 HTTPS 生产域名
-const BASE_URL = 'http://127.0.0.1:3001/api'
+// 备案前临时用 IP；备案 + SSL 后改为 'https://api.yangmintaoci.cn'
+const HOST = 'http://124.221.2.61'
+const BASE_URL = HOST + '/api'
+const IMAGE_BASE_URL = HOST  // 给 wxml 拼图片用
 
 const NO_AUTH_PATHS = [
   '/client/auth/mini-login',
@@ -19,6 +21,27 @@ const NO_AUTH_PATHS = [
   '/client/config',
 ]
 
+// 把后端返回的相对路径 /uploads/xxx 自动加上域名前缀
+function fixImageUrl(value) {
+  if (value == null) return value
+  if (typeof value === 'string') {
+    if (value.startsWith('/uploads/') || value.startsWith('uploads/')) {
+      return HOST + (value.startsWith('/') ? '' : '/') + value
+    }
+    return value
+  }
+  if (Array.isArray(value)) {
+    return value.map(fixImageUrl)
+  }
+  if (typeof value === 'object') {
+    const out = {}
+    for (const k in value) {
+      out[k] = fixImageUrl(value[k])
+    }
+    return out
+  }
+  return value
+}
 
 function isAdminPath(url) {
   return typeof url === 'string' && url.indexOf('/admin/') === 0
@@ -36,7 +59,6 @@ function request(options) {
       ? (options.skipAuth ? '' : wx.getStorageSync('adminToken'))
       : (options.skipAuth ? '' : wx.getStorageSync('token'))
 
-    // 需要登录但无 token 时直接跳对应登录页
     if (!isPublic(url) && !token && !options.skipAuth) {
       const target = isAdmin ? '/pages/admin/login/login' : '/pages/login/login'
       wx.navigateTo({ url: target })
@@ -47,10 +69,6 @@ function request(options) {
       wx.showLoading({ title: options.loadingText || '加载中', mask: true })
     }
 
-    // 修复：wx.request 在写方法（POST/PUT/PATCH/DELETE）下若 data=null/undefined，
-    // 会把字符串 "null" 作为 body 发出。后端 NestJS 启用了 rawBody+严格 JSON 解析后，
-    // 对根值为 null 的 body 直接抛 SyntaxError "Unexpected token 'n'..."。
-    // 这里统一在写方法下兜底为 {}，让 body 永远是合法对象。
     const writeMethods = ['POST', 'PUT', 'PATCH', 'DELETE']
     const methodUpper = (options.method || 'GET').toUpperCase()
     const safeData = writeMethods.indexOf(methodUpper) >= 0 && options.data == null
@@ -97,7 +115,8 @@ function request(options) {
 
         const body = res.data || {}
         if (body.code === 0) {
-          resolve(body.data)
+          // 关键：自动给所有 /uploads/... 字段拼上域名
+          resolve(fixImageUrl(body.data))
         } else {
           const msg = body.message || `请求失败 (${res.statusCode})`
           if (!options.silent) {
@@ -123,6 +142,8 @@ function isLogin() {
 
 module.exports = {
   BASE_URL,
+  HOST,
+  IMAGE_BASE_URL,
   isLogin,
   get: (url, data, opts = {}) => request({ url, method: 'GET', data, ...opts }),
   post: (url, data, opts = {}) => request({ url, method: 'POST', data, ...opts }),
