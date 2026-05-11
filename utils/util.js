@@ -34,13 +34,9 @@ function getBasePrice(item) {
   )
 }
 
-// 已下线阶梯价：批发端不再展示「N 件起 X 元」，统一返回空数组让所有调用方走单价路径
-function normalizePriceTiers(_source) {
-  return []
-}
-
-// 兼容保留：原阶梯解析逻辑（已禁用）
-function _legacyNormalizePriceTiers(source) {
+// 解析 priceTiers：批发端单价唯一来源（后端 sku.priceTiers[*].price）
+// UI 已不再展示阶梯表，但取价仍依赖此函数
+function normalizePriceTiers(source) {
   const raw = source && (
     source.priceTiers ||
     source.price_tiers ||
@@ -71,12 +67,12 @@ function _legacyNormalizePriceTiers(source) {
 
       return {
         ...tier,
-        minQty,
+        minQty: minQty || 1,
         maxQty: Number.isNaN(maxQty) ? null : maxQty,
         price,
       }
     })
-    .filter((tier) => tier.minQty > 0 && tier.price > 0)
+    .filter((tier) => tier.price > 0)
     .sort((a, b) => a.minQty - b.minQty)
 }
 
@@ -112,21 +108,11 @@ function debounce(fn, wait = 300) {
   }
 }
 
-// 阶梯价命中：根据数量从 priceTiers 中选当前单价
-function pickTierPrice(qty, priceTiers, fallbackPrice) {
+// 取批发单价：阶梯已下线，统一取 priceTiers 第一档作为单价；无 tier 则回退
+function pickTierPrice(_qty, priceTiers, fallbackPrice) {
   const tiers = normalizePriceTiers({ priceTiers })
-  if (!tiers.length) return Number(fallbackPrice) || 0
-  const count = Number(qty) || 0
-  let hit = null
-  for (const t of tiers) {
-    const min = Number(t.minQty) || 0
-    const max = t.maxQty == null ? Infinity : Number(t.maxQty)
-    if (count >= min && count <= max) {
-      hit = t
-      break
-    }
-  }
-  return Number(hit ? hit.price : fallbackPrice) || 0
+  if (tiers.length && tiers[0].price > 0) return Number(tiers[0].price)
+  return Number(fallbackPrice) || 0
 }
 
 // 订单状态映射（兼容多种后端枚举命名）

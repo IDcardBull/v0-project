@@ -3,7 +3,25 @@
 const {
   formatPrice,
   getBasePrice,
+  normalizePriceTiers,
 } = require('../../utils/util.js')
+
+// 取卡片显示价：优先用后端聚合 tierMinPrice / tierMaxPrice
+// 其次扫描 skus[].priceTiers[0].price，最后兜底到商品零售价
+function pickCardPrice(p) {
+  if (p && p.tierMinPrice != null && Number(p.tierMinPrice) > 0) {
+    return Number(p.tierMinPrice)
+  }
+  if (Array.isArray(p && p.skus)) {
+    for (const sku of p.skus) {
+      const tiers = normalizePriceTiers(sku)
+      if (tiers.length) return tiers[0].price
+    }
+  }
+  const productTiers = normalizePriceTiers(p)
+  if (productTiers.length) return productTiers[0].price
+  return getBasePrice(p)
+}
 
 Component({
   properties: {
@@ -22,7 +40,7 @@ Component({
   observers: {
     product(p) {
       if (!p) return
-      const price = getBasePrice(p)
+      const price = pickCardPrice(p)
       const sales = p.salesCount > 0 ? `已售 ${p.salesCount}` : '暂无销量'
       const tag = (p.tags && p.tags[0]) || ''
       this.setData({

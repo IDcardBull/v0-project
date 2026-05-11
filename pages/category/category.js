@@ -1,6 +1,17 @@
 // pages/category/category.js
 const api = require('../../utils/api.js')
-const { formatPrice } = require('../../utils/util.js')
+const { formatPrice, normalizePriceTiers, getBasePrice } = require('../../utils/util.js')
+
+function pickListPrice(p) {
+  if (p && p.tierMinPrice != null && Number(p.tierMinPrice) > 0) return Number(p.tierMinPrice)
+  if (Array.isArray(p && p.skus)) {
+    for (const sku of p.skus) {
+      const tiers = normalizePriceTiers(sku)
+      if (tiers.length) return tiers[0].price
+    }
+  }
+  return getBasePrice(p)
+}
 
 Page({
   data: {
@@ -56,7 +67,7 @@ Page({
         id: p.id,
         name: p.name,
         image: p.mainImage,
-        price: formatPrice(p.retailPrice),
+        price: formatPrice(pickListPrice(p)),
       }))
       this.setData({ recList: list })
     } catch (e) {
