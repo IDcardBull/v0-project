@@ -6,7 +6,7 @@
 // =====================================================
 
 // 备案前临时用 IP；备案 + SSL 后改为 'https://api.yangmintaoci.cn'
-const HOST = 'http://124.221.2.61'
+const HOST = 'https://api-proxy-256554-6-1424676913.sh.run.tcloudbase.com'
 const BASE_URL = HOST + '/api'
 const IMAGE_BASE_URL = HOST  // 给 wxml 拼图片用
 
